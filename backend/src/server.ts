@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { query } from './config/db';
 import utilisateurRoutes from './routes/utilisateur';
+import authRoutes from './routes/auth';
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -10,12 +11,22 @@ app.use(express.json());
 
 // API mount
 app.use('/api/utilisateurs', utilisateurRoutes);
-
-app.use(express.static(path.join(__dirname, '..', '..', 'frontend')));
+app.use('/api/auth', authRoutes);
 
 app.get('/', (_req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'index.html'));
+    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'accueil.html'));
 });
+
+app.get('/login', (_req, res) => {
+    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'login.html'));
+});
+
+app.get('/profile', (_req, res) => {
+    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'profile.html'));
+});
+
+// Serve frontend static files (CSS, JS, images, etc.)
+app.use(express.static(path.join(__dirname, '..', '..', 'frontend'), { index: false }));
 
 async function start() {
     try {
