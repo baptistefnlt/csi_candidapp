@@ -208,17 +208,32 @@
         <!-- Recent Activity -->
         <div class="mt-8">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Activité récente</h2>
-          <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+
+          <!-- Loading State -->
+          <div id="candidaturesLoading" class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-center justify-center space-x-3">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+              <p class="text-gray-600">Chargement de vos candidatures...</p>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div id="candidaturesEmpty" class="hidden bg-white rounded-2xl shadow-lg overflow-hidden">
             <div class="p-6 text-center text-gray-500">
               <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <p>Aucune activité récente</p>
-              <a href="/candidatures/nouvelle"
-                class="inline-block mt-3 text-primary-600 hover:text-primary-700 font-medium">Ajouter votre première
-                candidature →</a>
+              <a href="/offres" class="inline-block mt-3 text-primary-600 hover:text-primary-700 font-medium">Découvrir
+                les offres disponibles →</a>
             </div>
+          </div>
+
+          <!-- Candidatures List -->
+          <div id="candidaturesList"
+            class="hidden bg-white rounded-2xl shadow-lg overflow-hidden divide-y divide-gray-100">
+            <!-- Will be populated dynamically -->
           </div>
         </div>
       </div>
@@ -255,6 +270,146 @@
       sessionStorage.removeItem('user');
       window.location.href = '/login';
     });
+
+    // Fonction pour formater les dates
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+
+    // Fonction pour obtenir le badge de statut
+    function getStatutBadge(statut) {
+      const badges = {
+        'EN_ATTENTE': {
+          class: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          label: 'En attente',
+          icon: `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                 </svg>`
+        },
+        'RETENU': {
+          class: 'bg-green-100 text-green-800 border-green-200',
+          label: 'Acceptée',
+          icon: `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                 </svg>`
+        },
+        'REFUSE': {
+          class: 'bg-red-100 text-red-800 border-red-200',
+          label: 'Refusée',
+          icon: `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                 </svg>`
+        },
+        'ANNULE': {
+          class: 'bg-gray-100 text-gray-800 border-gray-200',
+          label: 'Annulée',
+          icon: `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                 </svg>`
+        }
+      };
+      return badges[statut] || badges['EN_ATTENTE'];
+    }
+
+    // Fonction pour vérifier si l'offre est invalide
+    function isOffreInvalide(statutOffre) {
+      const statutsInvalides = ['CLOTUREE', 'ARCHIVEE', 'REJETEE'];
+      return statutsInvalides.includes(statutOffre);
+    }
+
+    // Fonction pour charger les candidatures
+    async function loadCandidatures() {
+      try {
+        const response = await fetch('/api/mes-candidatures');
+        const data = await response.json();
+
+        document.getElementById('candidaturesLoading').classList.add('hidden');
+
+        if (!data.ok || data.candidatures.length === 0) {
+          document.getElementById('candidaturesEmpty').classList.remove('hidden');
+          return;
+        }
+
+        const candidaturesList = document.getElementById('candidaturesList');
+        candidaturesList.innerHTML = '';
+
+        data.candidatures.forEach((candidature, index) => {
+          const statutBadge = getStatutBadge(candidature.statut_candidature);
+          const offreInvalide = candidature.statut_candidature === 'EN_ATTENTE' &&
+            isOffreInvalide(candidature.statut_actuel_offre);
+
+          const candidatureItem = document.createElement('div');
+          candidatureItem.className = 'p-5 hover:bg-gray-50 transition';
+
+          candidatureItem.innerHTML = `
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 font-semibold">
+                    ${index + 1}
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="font-bold text-gray-900 text-lg mb-1">${candidature.offre_titre}</h3>
+                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span class="font-medium">${candidature.entreprise_nom}</span>
+                      </div>
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>${candidature.entreprise_ville}</span>
+                      </div>
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Postulé le ${formatDate(candidature.date_candidature)}</span>
+                      </div>
+                    </div>
+                    ${offreInvalide ? `
+                      <div class="flex items-center text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span class="font-medium">Cette offre n'est plus disponible (${candidature.statut_actuel_offre})</span>
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="flex-shrink-0 ml-4">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${statutBadge.class}">
+                  ${statutBadge.icon}
+                  ${statutBadge.label}
+                </span>
+              </div>
+            </div>
+          `;
+
+          candidaturesList.appendChild(candidatureItem);
+        });
+
+        candidaturesList.classList.remove('hidden');
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des candidatures:', error);
+        document.getElementById('candidaturesLoading').classList.add('hidden');
+        document.getElementById('candidaturesEmpty').classList.remove('hidden');
+      }
+    }
+
+    // Charger les candidatures au chargement de la page
+    loadCandidatures();
   </script>
 </body>
 
