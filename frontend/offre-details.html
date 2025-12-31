@@ -401,10 +401,109 @@
         }
 
         // Gestionnaire du bouton Postuler
-        document.getElementById('postulerBtn').addEventListener('click', () => {
-            alert('Fonctionnalité de candidature à implémenter');
-            // Plus tard : redirection vers un formulaire de candidature
+        const postulerBtn = document.getElementById('postulerBtn');
+        postulerBtn.addEventListener('click', async () => {
+            const offreId = getOffreIdFromUrl();
+
+            // Désactiver le bouton pendant le chargement
+            postulerBtn.disabled = true;
+            postulerBtn.classList.remove('bg-primary-600', 'hover:bg-primary-700');
+            postulerBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            postulerBtn.innerHTML = `
+                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Envoi...</span>
+            `;
+
+            // Supprimer les messages d'erreur précédents
+            const existingError = document.getElementById('candidatureError');
+            if (existingError) existingError.remove();
+
+            try {
+                const response = await fetch('/api/candidatures', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ offre_id: offreId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Succès - Bouton vert avec animation
+                    postulerBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                    postulerBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                    postulerBtn.innerHTML = `
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Candidature envoyée !</span>
+                    `;
+
+                    // Animation de confettis (simple toast de succès)
+                    showSuccessToast();
+
+                } else if (response.status === 409) {
+                    // Erreur 409 - Déjà postulé
+                    resetButton();
+                    showErrorMessage('Vous avez déjà postulé à cette offre.');
+
+                } else {
+                    // Autre erreur
+                    resetButton();
+                    showErrorMessage('Erreur technique, réessayez plus tard.');
+                }
+
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+                resetButton();
+                showErrorMessage('Erreur technique, réessayez plus tard.');
+            }
         });
+
+        // Fonction pour réinitialiser le bouton
+        function resetButton() {
+            const postulerBtn = document.getElementById('postulerBtn');
+            postulerBtn.disabled = false;
+            postulerBtn.classList.remove('bg-gray-400', 'cursor-not-allowed', 'bg-green-600', 'hover:bg-green-700');
+            postulerBtn.classList.add('bg-primary-600', 'hover:bg-primary-700');
+            postulerBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Postuler à cette offre</span>
+            `;
+        }
+
+        // Fonction pour afficher un message d'erreur
+        function showErrorMessage(message) {
+            const postulerBtn = document.getElementById('postulerBtn');
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'candidatureError';
+            errorDiv.className = 'mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium';
+            errorDiv.textContent = message;
+            postulerBtn.parentElement.appendChild(errorDiv);
+        }
+
+        // Fonction pour afficher un toast de succès
+        function showSuccessToast() {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-24 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 animate-bounce z-50';
+            toast.innerHTML = `
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="font-semibold">Candidature envoyée avec succès !</span>
+            `;
+            document.body.appendChild(toast);
+
+            // Retirer le toast après 4 secondes
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
 
         // Charger les détails au chargement de la page
         loadOffreDetails();
