@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Déposer mon attestation RC - Candidapp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="/profile" class="flex items-center space-x-2">
+                <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <span class="text-xl font-bold text-gray-900">Candidapp</span>
+            </a>
+
+            <a href="/profile" class="text-gray-600 hover:text-primary-700 font-medium transition">
+                ← Retour profil
+            </a>
+        </div>
+    </nav>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Déposer mon attestation RC</h1>
+        <p class="text-gray-600 mb-6">
+            Dépose ton PDF. Statut par défaut : <span class="font-semibold">EN_ATTENTE</span>.
+        </p>
+
+        <!-- Alerts -->
+        <div id="alert"
+             class="hidden mb-6 px-4 py-3 rounded-lg text-sm border">
+        </div>
+
+        <!-- Statut -->
+        <div class="grid sm:grid-cols-2 gap-4 mb-8">
+            <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Statut actuel</p>
+                <p id="statut" class="text-lg font-semibold text-gray-900">—</p>
+            </div>
+
+            <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Dernier dépôt</p>
+                <p id="dateDepot" class="text-lg font-semibold text-gray-900">—</p>
+            </div>
+        </div>
+
+        <!-- Lien PDF si existant -->
+        <div id="existingFileBox" class="hidden mb-8">
+            <a id="existingFileLink" href="#" target="_blank"
+               class="inline-flex items-center px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold transition">
+                Ouvrir mon attestation déposée
+            </a>
+        </div>
+
+        <!-- Form dépôt -->
+        <form id="uploadForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fichier PDF</label>
+                <input id="fileInput" type="file" accept="application/pdf"
+                       class="block w-full text-sm text-gray-700
+                   file:mr-4 file:py-2 file:px-4
+                   file:rounded-lg file:border-0
+                   file:text-sm file:font-semibold
+                   file:bg-primary-50 file:text-primary-700
+                   hover:file:bg-primary-100
+                   border border-gray-300 rounded-lg p-2" />
+                <p class="text-xs text-gray-500 mt-2">Astuce : privilégie un PDF léger (≈ 1–2 Mo).</p>
+            </div>
+
+            <button id="submitBtn" type="submit"
+                    class="w-full sm:w-auto px-6 py-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-lg hover:shadow-xl transition">
+                Déposer l’attestation
+            </button>
+        </form>
+    </div>
+</main>
+
+<script>
+    function getUserOrRedirect() {
+        const raw = sessionStorage.getItem('user');
+        if (!raw) {
+            window.location.href = '/login';
+            return null;
+        }
+        return JSON.parse(raw);
+    }
+
+    function showAlert(type, msg) {
+        const el = document.getElementById('alert');
+        el.classList.remove('hidden');
+        el.className = 'mb-6 px-4 py-3 rounded-lg text-sm border';
+
+        if (type === 'success') {
+            el.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
+        } else {
+            el.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+        }
+        el.textContent = msg;
+    }
+
+    async function loadStatus() {
+        const user = getUserOrRedirect();
+        if (!user) return;
+
+        const res = await fetch('/api/attestation-rc/me', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, role: user.role })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            document.getElementById('statut').textContent = '—';
+            document.getElementById('dateDepot').textContent = '—';
+            return;
+        }
+
+        const att = data.attestation;
+        if (!att) {
+            document.getElementById('statut').textContent = 'AUCUNE';
+            document.getElementById('dateDepot').textContent = '—';
+            document.getElementById('existingFileBox').classList.add('hidden');
+            return;
+        }
+
+        document.getElementById('statut').textContent = att.statut;
+        document.getElementById('dateDepot').textContent = att.date_depot || '—';
+
+        if (att.fichier_url) {
+            const box = document.getElementById('existingFileBox');
+            const link = document.getElementById('existingFileLink');
+            link.href = att.fichier_url; // data:application/pdf;base64,...
+            box.classList.remove('hidden');
+        } else {
+            document.getElementById('existingFileBox').classList.add('hidden');
+        }
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const user = getUserOrRedirect();
+        if (!user) return;
+
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+            showAlert('error', 'Sélectionne un fichier PDF.');
+            return;
+        }
+        if (file.type !== 'application/pdf') {
+            showAlert('error', 'Format invalide : PDF requis.');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Dépôt en cours...';
+
+        try {
+            // Convertir en Data URL (base64)
+            const fichierDataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Lecture fichier impossible'));
+                reader.readAsDataURL(file);
+            });
+
+            const res = await fetch('/api/attestation-rc/deposer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    role: user.role,
+                    fichierDataUrl: fichierDataUrl
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                showAlert('error', data.error || 'Erreur lors du dépôt');
+            } else {
+                showAlert('success', data.message || 'Attestation déposée');
+                await loadStatus();
+                fileInput.value = '';
+            }
+        } catch (err) {
+            showAlert('error', 'Erreur de connexion au serveur');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Déposer l’attestation';
+        }
+    });
+
+    loadStatus();
+</script>
+</body>
+</html>
