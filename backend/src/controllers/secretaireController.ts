@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
 import { query } from '../config/db';
+import { DashboardSecretaireStats } from '../types/Dashboard';
 
 // ==================== DASHBOARD SECRÉTAIRE ====================
 
 // GET /api/dashboard/secretaire/stats - Récupérer les statistiques du dashboard secrétaire
 export const getDashboardStats = async (_req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM v_dashboard_secretaire_stats');
+        const result = await query<DashboardSecretaireStats>('SELECT * FROM v_dashboard_secretaire_stats');
 
         // Les stats sont normalement sur une seule ligne
         const stats = result.rows[0] || {
