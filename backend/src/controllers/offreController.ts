@@ -8,7 +8,7 @@ import { OffreVisible } from '../types/Offre';
  */
 export async function getOffresHandler(req: Request, res: Response) {
   try {
-    const result = await query('SELECT * FROM v_offres_visibles_etudiant ORDER BY date_debut DESC');
+    const result = await query<OffreVisible>('SELECT * FROM v_offres_visibles_etudiant ORDER BY date_debut DESC');
     const offres: OffreVisible[] = result.rows;
     
     res.json({ ok: true, offres });
@@ -30,7 +30,7 @@ export async function getOffreByIdHandler(req: Request, res: Response) {
   }
 
   try {
-    const result = await query(
+    const result = await query<OffreVisible>(
       'SELECT * FROM v_offres_visibles_etudiant WHERE offre_id = $1',
       [id]
     );

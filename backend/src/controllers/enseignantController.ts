@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { query } from '../config/db';
+import { RegleLegale } from '../types/RegleLegale';
+import { DashboardEnseignantStats } from '../types/Dashboard';
 
 // ==================== RÉFÉRENTIEL LÉGAL (CRUD) ====================
 
 // GET /api/enseignant/referentiel - Lire toutes les règles légales
 export const getReferentielLegal = async (_req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM v_referentiel_legal ORDER BY pays, type_contrat');
+        const result = await query<RegleLegale>('SELECT * FROM v_referentiel_legal ORDER BY pays, type_contrat');
 
         return res.status(200).json({
             ok: true,
@@ -158,7 +160,7 @@ export const deleteRegleLegale = async (req: Request, res: Response) => {
 // GET /api/enseignant/stats - Récupérer les statistiques du dashboard
 export const getDashboardStats = async (_req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM v_dashboard_enseignant_stats');
+        const result = await query<DashboardEnseignantStats>('SELECT * FROM v_dashboard_enseignant_stats');
 
         // Les stats sont normalement sur une seule ligne
         const stats = result.rows[0] || {

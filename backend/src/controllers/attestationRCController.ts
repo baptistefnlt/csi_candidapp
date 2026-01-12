@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { query } from '../config/db';
+import { AttestationRC } from '../types/AttestationRC';
 
 async function getEtudiantIdFromUserId(userId: number): Promise<number | null> {
     const r = await query(
@@ -27,7 +28,7 @@ export async function getMyAttestationRCHandler(req: Request, res: Response) {
             return res.status(404).json({ ok: false, error: 'Profil étudiant introuvable' });
         }
 
-        const result = await query(
+        const result = await query<AttestationRC>(
             `SELECT etudiant_id, statut, fichier_url, date_depot, date_validation
        FROM "AttestationRC"
        WHERE etudiant_id = $1`,
