@@ -17,6 +17,8 @@ export async function loginHandler(req: Request, res: Response) {
       redirectUrl = '/enseignant/dashboard';
     } else if (user.role === 'SECRETAIRE') {
       redirectUrl = '/secretaire/dashboard';
+    }else if (user.role === 'ENTREPRISE') {
+      redirectUrl = '/dashboard/entreprise'; 
     }
 
     res.json({
@@ -31,10 +33,10 @@ export async function loginHandler(req: Request, res: Response) {
 }
 
 export async function registerEntreprise(req: Request, res: Response) {
-  const { raisonSociale, email, password } = req.body;
+  const { raisonSociale, email, password, siret, adresse, ville, pays, siteWeb, contactNom } = req.body;
 
   // Validation
-  if (!raisonSociale || !email || !password) {
+  if (!raisonSociale || !email || !password || !siret || !adresse || !ville || !pays || !contactNom) {
     return res.status(400).json({ error: 'MISSING_FIELDS' });
   }
 
@@ -84,9 +86,20 @@ export async function registerEntreprise(req: Request, res: Response) {
 
     // Créer l'entreprise (pays="France" par défaut comme requis par le modèle)
     await client.query(
-      `INSERT INTO "Entreprise" (utilisateur_id, raison_sociale, pays)
-       VALUES ($1, $2, $3)`,
-      [userId, raisonSociale, 'France']
+      `INSERT INTO "Entreprise" 
+       (utilisateur_id, raison_sociale, siret, adresse, ville, pays, site_web, contact_nom, contact_email)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        userId, 
+        raisonSociale, 
+        siret, 
+        adresse, 
+        ville, 
+        pays, 
+        siteWeb || null, // Si siteWeb est vide, on met NULL
+        contactNom,
+        email // On utilise l'email de connexion comme contact_email par défaut
+      ]
     );
 
     await client.query('COMMIT');
