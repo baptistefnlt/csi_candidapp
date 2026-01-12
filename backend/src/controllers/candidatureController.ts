@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { query } from '../config/db';
+import { MesCandidatures } from '../types/Candidature';
 
 /**
  * Postuler à une offre
@@ -57,7 +58,7 @@ export async function getMesCandidaturesHandler(req: Request, res: Response) {
         return res.status(403).json({ ok: false });
     }
 
-    const result = await query(
+    const result = await query<MesCandidatures>(
         `SELECT candidature_id, date_candidature, statut_candidature,
             offre_titre, entreprise_nom, entreprise_ville, statut_actuel_offre
      FROM v_mes_candidatures_etudiant

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -19,10 +19,13 @@ pool.on('error', (err: Error) => {
 });
 
 /**
- * Exécute une requête SQL.
+ * Exécute une requête SQL typée.
  */
-export const query = (text: string, params?: any[]): Promise<QueryResult> => {
-    return pool.query(text, params);
+export const query = async <T extends QueryResultRow = any>(
+    text: string,
+    params?: any[]
+): Promise<QueryResult<T>> => {
+    return pool.query<T>(text, params);
 };
 
 /**
