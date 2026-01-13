@@ -33,7 +33,8 @@
 <header class="bg-white shadow-sm sticky top-0 z-50">
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-            <a href="/profile" class="flex items-center space-x-2">
+            <!-- Logo -->
+            <a href="/" class="flex items-center space-x-2">
                 <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -43,18 +44,56 @@
                 <span class="text-xl font-bold text-gray-900">Candidapp</span>
             </a>
 
-            <a href="/profile" class="text-gray-600 hover:text-primary-700 font-medium transition">
-                ← Retour profil
-            </a>
+            <!-- Navigation -->
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="/" class="text-gray-600 hover:text-primary-600 transition">Accueil</a>
+                <a href="/profile" class="text-gray-600 hover:text-primary-600 transition">Mon profil</a>
+                <a href="/offres" class="text-gray-600 hover:text-primary-600 transition">Offres</a>
+                <a href="/candidatures" class="text-gray-600 hover:text-primary-600 transition">Mes candidatures</a>
+            </div>
+
+            <!-- User Menu -->
+            <div class="flex items-center space-x-4">
+                <div id="userBadge" class="hidden md:flex items-center space-x-2 bg-primary-50 px-3 py-1.5 rounded-full">
+                    <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+                        <span id="userInitial" class="text-white font-semibold text-sm"></span>
+                    </div>
+                    <span id="userEmailBadge" class="text-primary-700 font-medium text-sm max-w-[120px] truncate"></span>
+                </div>
+                <button id="logoutBtn" class="flex items-center space-x-2 text-gray-600 hover:text-red-600 font-medium transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span class="hidden sm:inline">Déconnexion</span>
+                </button>
+            </div>
         </div>
     </nav>
 </header>
 
+<!-- Page Header -->
+<section class="gradient-bg text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold">Attestation RC</h1>
+                <p class="text-purple-200 mt-1">Dépose ton attestation de Responsabilité Civile</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Déposer mon attestation RC</h1>
         <p class="text-gray-600 mb-6">
-            Dépose ton PDF. Statut par défaut : <span class="font-semibold">En attente</span>.
+            Dépose ton PDF. Statut par défaut : <span class="font-semibold text-primary-600">En attente</span>.
         </p>
 
         <!-- Alerts -->
@@ -108,7 +147,40 @@
     </div>
 </main>
 
+<!-- Footer -->
+<footer class="bg-gray-900 text-white py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+        <p>&copy; 2026 Candidapp. Tous droits réservés.</p>
+    </div>
+</footer>
+
 <script>
+    // Fonction utilitaire d'authentification
+    function getUserOrRedirect() {
+        const raw = sessionStorage.getItem('user');
+        if (!raw) {
+            window.location.href = '/login';
+            return null;
+        }
+        return JSON.parse(raw);
+    }
+
+    // Initialisation de l'utilisateur et du header
+    function initUserHeader() {
+        const user = getUserOrRedirect();
+        if (!user) return;
+
+        const initial = (user.email || '?').charAt(0).toUpperCase();
+        document.getElementById('userInitial').textContent = initial;
+        document.getElementById('userEmailBadge').textContent = user.email;
+        document.getElementById('userBadge').classList.remove('hidden');
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        sessionStorage.removeItem('user');
+        window.location.href = '/login';
+    });
+
     function formatDate(dateStr) {
         if (!dateStr) return '—';
 
@@ -122,14 +194,6 @@
         }).format(date);
     }
 
-    function getUserOrRedirect() {
-        const raw = sessionStorage.getItem('user');
-        if (!raw) {
-            window.location.href = '/login';
-            return null;
-        }
-        return JSON.parse(raw);
-    }
 
     function showAlert(type, msg) {
         const el = document.getElementById('alert');
@@ -263,6 +327,7 @@
     }
 
     loadStatus();
+    initUserHeader();
 </script>
 </body>
 </html>

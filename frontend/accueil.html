@@ -328,11 +328,40 @@
       </div>
 
       <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-        <p>&copy; 2025 Candidapp. Tous droits réservés.</p>
+        <p>&copy; 2026 Candidapp. Tous droits réservés.</p>
       </div>
     </div>
   </footer>
 
+<script>
+    // Gestion dynamique du header si l'utilisateur est connecté
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+      if (user) {
+        const authButtons = document.querySelector('.flex.items-center.space-x-4');
+        if (authButtons) {
+          const initial = (user.email || '?').charAt(0).toUpperCase();
+          let dashboardUrl = '/profile';
+          if (user.role === 'ENSEIGNANT') dashboardUrl = '/enseignant/dashboard';
+          else if (user.role === 'SECRETAIRE') dashboardUrl = '/secretaire/dashboard';
+          else if (user.role === 'ENTREPRISE') dashboardUrl = '/dashboard/entreprise';
+
+          authButtons.innerHTML = `
+            <div class="flex items-center space-x-2 bg-primary-50 px-3 py-1.5 rounded-full">
+              <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+                <span class="text-white font-semibold text-sm">${initial}</span>
+              </div>
+              <span class="text-primary-700 font-medium text-sm max-w-[120px] truncate">${user.email}</span>
+            </div>
+            <a href="${dashboardUrl}"
+               class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition">
+              Mon espace
+            </a>
+          `;
+        }
+      }
+    });
+  </script>
+
 </body>
 </html>
-

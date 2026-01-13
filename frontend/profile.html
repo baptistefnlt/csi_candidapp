@@ -61,6 +61,14 @@
                 <span class="text-xl font-bold text-gray-900">Candidapp</span>
             </a>
 
+            <!-- Navigation -->
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="/" class="text-gray-600 hover:text-primary-600 transition">Accueil</a>
+                <a href="/profile" class="text-primary-600 font-semibold border-b-2 border-primary-600 pb-1">Mon profil</a>
+                <a href="/offres" class="text-gray-600 hover:text-primary-600 transition">Offres</a>
+                <a href="/candidatures" class="text-gray-600 hover:text-primary-600 transition">Mes candidatures</a>
+            </div>
+
             <!-- User Menu -->
             <div class="flex items-center space-x-4">
                 <div id="userBadge"
@@ -68,7 +76,7 @@
                     <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
                         <span id="userInitial" class="text-white font-semibold text-sm"></span>
                     </div>
-                    <span id="userEmailBadge" class="text-primary-700 font-medium text-sm"></span>
+                    <span id="userEmailBadge" class="text-primary-700 font-medium text-sm max-w-[120px] truncate"></span>
                 </div>
                 <button id="logout"
                         class="flex items-center space-x-2 text-gray-600 hover:text-red-600 font-medium transition">
@@ -260,7 +268,7 @@
 <!-- Footer -->
 <footer class="bg-gray-900 text-white py-6 mt-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
-        <p>&copy; 2025 Candidapp. Tous droits réservés.</p>
+        <p>&copy; 2026 Candidapp. Tous droits réservés.</p>
     </div>
 </footer>
 
