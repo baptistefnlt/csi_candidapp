@@ -170,11 +170,15 @@
     </main>
 
     <script>
+        const user = JSON.parse(sessionStorage.getItem("user") || "null");
+        if (!user || !user.id) window.location.href = "/login";
+        const userId = user.id;
+        
         // ==================== LOAD STATS ====================
         async function loadStats() {
             try {
                 // Créer cette route dans ton backend
-                const response = await fetch('/api/entreprise/stats'); 
+                const response = await fetch(`/api/entreprise/stats?userId=${userId}`); 
                 const data = await response.json();
 
                 if (data.ok) {
@@ -191,7 +195,7 @@
         async function loadOffres() {
             try {
                 // Créer cette route dans ton backend qui renvoie les offres de l'entreprise connectée
-                const response = await fetch('/api/entreprise/mes-offres');
+                const response = await fetch(`/api/entreprise/mes-offres?userId=${userId}`);
                 const data = await response.json();
 
                 document.getElementById('loadingState').classList.add('hidden');
@@ -293,20 +297,24 @@
         }
 
         function getStatusBadge(statut) {
-            // Adapte les valeurs 'VALIDEE', 'EN_ATTENTE' selon ta BDD exacte
-            if (statut === 'VALIDE' || statut === 'VALIDEE') {
-                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">En ligne</span>`;
-            } else if (statut === 'REFUSE' || statut === 'REFUSEE') {
-                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Refusée</span>`;
-            } else {
-                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">En attente</span>`;
-            }
+        if (statut === 'VALIDE') {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">En ligne</span>`;
+        }
+        if (statut === 'REFUSE') {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Refusée</span>`;
+        }
+        if (statut === 'BROUILLON') {
+            // fallback ultra-propre si jamais ça arrive
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Non soumise</span>`;
+        }
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">En attente</span>`;
         }
 
         function getBorderColor(statut) {
-             if (statut === 'VALIDE' || statut === 'VALIDEE') return 'border-green-500';
-             if (statut === 'REFUSE' || statut === 'REFUSEE') return 'border-red-500';
-             return 'border-yellow-500';
+        if (statut === 'VALIDE') return 'border-green-500';
+        if (statut === 'REFUSE') return 'border-red-500';
+        if (statut === 'BROUILLON') return 'border-gray-400';
+        return 'border-yellow-500';
         }
 
         function showToast(message, type = 'success') {
