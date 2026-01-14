@@ -1208,3 +1208,48 @@ create trigger trg_action_valider_attestation_rc_update
     for each row
 execute procedure trg_action_valider_attestation_rc_func();
 
+-- =====================================================
+-- VUE ACTION : Mise à jour profil étudiant (CV + recherche)
+-- =====================================================
+
+create view v_action_update_profil_etudiant
+            (utilisateur_id, en_recherche, cv_url) as
+SELECT e.utilisateur_id,
+       e.en_recherche,
+       e.cv_url
+FROM "Etudiant" e;
+
+alter table v_action_update_profil_etudiant
+    owner to m1user1_02;
+
+grant select, update on v_action_update_profil_etudiant to role_etudiant;
+
+create function trg_action_update_profil_etudiant_func() returns trigger
+    language plpgsql
+as
+$$
+BEGIN
+    UPDATE "Etudiant"
+    SET en_recherche = COALESCE(NEW.en_recherche, OLD.en_recherche),
+        cv_url = CASE
+            WHEN NEW.cv_url IS DISTINCT FROM OLD.cv_url THEN NEW.cv_url
+            ELSE OLD.cv_url
+        END
+    WHERE utilisateur_id = OLD.utilisateur_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Etudiant introuvable pour utilisateur_id=%', OLD.utilisateur_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+alter function trg_action_update_profil_etudiant_func() owner to m1user1_02;
+
+create trigger trg_action_update_profil_etudiant_update
+    instead of update
+    on v_action_update_profil_etudiant
+    for each row
+execute procedure trg_action_update_profil_etudiant_func();
+
