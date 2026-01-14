@@ -83,6 +83,10 @@
                     <span id="userEmailBadge"
                           class="text-primary-700 font-medium text-sm max-w-[120px] truncate"></span>
                 </div>
+                <button id="btnModeSecretaire"
+                    class="hidden px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition">
+                        Mode secrétariat
+                </button>
                 <button id="logoutBtn"
                         class="flex items-center space-x-2 text-gray-600 hover:text-red-600 font-medium transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -464,6 +468,29 @@
     initAuth();
     loadStats();
     loadOffres();
+
+    // ==================== CHECK DELEGATION SECRETAIRE ====================
+    async function checkDelegationSecretaire() {
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!user?.id) return;
+
+    try {
+        const r = await fetch(`/api/enseignant/delegation/secretaire?userId=${user.id}`);
+        const data = await r.json();
+
+        const btn = document.getElementById('btnModeSecretaire');
+        if (data.ok && data.active) {
+        btn.classList.remove('hidden');
+        btn.addEventListener('click', () => {
+            window.location.href = '/secretaire/dashboard';
+        });
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    }
+
+    checkDelegationSecretaire();
 </script>
 
 </body>

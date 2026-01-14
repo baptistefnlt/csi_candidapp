@@ -85,6 +85,10 @@ app.get('/attestation-rc', (_req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'attestation-rc.html'));
 });
 
+app.get('/secretaire/profil', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'profil-secretaire.html'));
+});
+
 // === AJOUTS POUR LE MODULE ENTREPRISE (C'EST ICI QUE CA MANQUAIT) ===
 
 // 1. Route pour le Dashboard Entreprise

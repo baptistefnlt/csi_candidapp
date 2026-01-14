@@ -18,9 +18,10 @@ function getUserIdFromReq(req: Request): number | null {
 }
 
 // ✅ IMPORTANT : passer par une vue (pas de SELECT direct sur "Secretaire")
+// ✅ NOUVEAU : autorise la secrétaire OU son remplaçant si congé actif
 async function getSecretaireIdFromUserId(userId: number): Promise<number | null> {
   const r = await query(
-    'SELECT secretaire_id FROM public.v_secretaire_by_user WHERE utilisateur_id = $1 LIMIT 1',
+    'SELECT secretaire_id FROM public.v_secretaire_autorise_by_user WHERE utilisateur_id = $1 LIMIT 1',
     [userId]
   );
   return r.rows[0]?.secretaire_id ?? null;
@@ -263,5 +264,38 @@ export const creerEtudiant = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Erreur création étudiant (outer):', error);
     return res.status(500).json({ ok: false, error: 'Erreur serveur' });
+  }
+};
+
+/* =========================================================
+  Profil Secretaire (100% VUES)
+   ========================================================= */
+
+export const getProfilSecretaire = async (req: Request, res: Response) => {
+  try {
+    const userIdRaw = req.query.userId;
+    if (!userIdRaw || Array.isArray(userIdRaw) || isNaN(Number(userIdRaw))) {
+      return res.status(400).json({ ok: false, error: 'userId manquant' });
+    }
+    const userId = Number(userIdRaw);
+
+    // secrétaire OU remplaçant actif
+    const secretaireId = await getSecretaireIdFromUserId(userId);
+    if (!secretaireId) return res.status(403).json({ ok: false, error: 'Accès interdit' });
+
+    const r = await query(
+      `SELECT utilisateur_id, nom, email, role, actif, created_at, secretaire_id, en_conge
+       FROM public.v_profil_secretaire
+       WHERE secretaire_id = $1
+       LIMIT 1`,
+      [secretaireId]
+    );
+
+    if (r.rows.length === 0) return res.status(404).json({ ok: false, error: 'Profil introuvable' });
+
+    return res.json({ ok: true, profil: r.rows[0] });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ ok: false, error: 'Erreur profil secrétaire' });
   }
 };
