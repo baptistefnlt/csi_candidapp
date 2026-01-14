@@ -285,3 +285,40 @@ export const getArchivesStages = async (req: Request, res: Response) => {
         });
     }
 };
+
+// ==================== remplaçant si congé secretaire actif ====================
+
+function getUserIdFromReq(req: Request): number | null {
+  const q = req.query.userId;
+  if (q && !Array.isArray(q) && !isNaN(Number(q))) return Number(q);
+
+  const b = (req.body as any)?.userId;
+  if (b !== undefined && !isNaN(Number(b))) return Number(b);
+
+  return null;
+}
+
+// GET /api/enseignant/delegation/secretaire?userId=...
+export const getDelegationSecretaireActive = async (req: Request, res: Response) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(400).json({ ok: false, error: 'userId manquant' });
+
+    const r = await query(
+      `SELECT conge_id, secretaire_id, date_debut, date_fin, motif
+       FROM public.v_delegation_secretaire_active_by_user
+       WHERE utilisateur_id = $1
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (r.rows.length === 0) {
+      return res.json({ ok: true, active: false });
+    }
+
+    return res.json({ ok: true, active: true, delegation: r.rows[0] });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ ok: false, error: 'Erreur délégation' });
+  }
+};

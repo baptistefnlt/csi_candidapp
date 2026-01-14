@@ -18,9 +18,10 @@ function getUserIdFromReq(req: Request): number | null {
 }
 
 // ✅ IMPORTANT : passer par une vue (pas de SELECT direct sur "Secretaire")
+// ✅ NOUVEAU : autorise la secrétaire OU son remplaçant si congé actif
 async function getSecretaireIdFromUserId(userId: number): Promise<number | null> {
   const r = await query(
-    'SELECT secretaire_id FROM v_secretaire_by_user WHERE utilisateur_id = $1 LIMIT 1',
+    'SELECT secretaire_id FROM public.v_secretaire_autorise_by_user WHERE utilisateur_id = $1 LIMIT 1',
     [userId]
   );
   return r.rows[0]?.secretaire_id ?? null;
@@ -33,7 +34,9 @@ async function getSecretaireIdFromUserId(userId: number): Promise<number | null>
 // GET /api/dashboard/secretaire/stats
 export const getDashboardStats = async (_req: Request, res: Response) => {
   try {
-    const result = await query<DashboardSecretaireStats>('SELECT * FROM v_dashboard_secretaire_stats');
+    const result = await query<DashboardSecretaireStats>(
+      'SELECT * FROM public.v_dashboard_secretaire_stats'
+    );
 
     const stats = result.rows[0] || {
       nb_etudiants_total: 0,
@@ -68,9 +71,8 @@ export const getAttestationsAValider = async (req: Request, res: Response) => {
       return res.status(403).json({ ok: false, error: 'Accès interdit (profil secrétaire introuvable)' });
     }
 
-    const result = await query('SELECT * FROM v_attestations_rc_a_valider');
+    const result = await query('SELECT * FROM public.v_attestations_rc_a_valider');
     return res.status(200).json({ ok: true, attestations: result.rows });
-
   } catch (error: any) {
     console.error('Erreur chargement attestations:', error);
     return res.status(500).json({ ok: false, error: 'Erreur chargement attestations' });
@@ -97,14 +99,13 @@ export const validerAttestationRC = async (req: Request, res: Response) => {
     }
 
     await query(
-      `UPDATE v_action_valider_attestation_rc
+      `UPDATE public.v_action_valider_attestation_rc
        SET decision = $1, motif_refus = $2, secretaire_id = $3
        WHERE etudiant_id = $4`,
       ['VALIDER', null, secretaireId, etudiantId]
     );
 
     return res.status(200).json({ ok: true, message: 'Attestation RC validée' });
-
   } catch (error: any) {
     console.error('Erreur validation RC:', error);
     return res.status(400).json({ ok: false, error: error.message || 'Erreur validation RC' });
@@ -134,14 +135,13 @@ export const refuserAttestationRC = async (req: Request, res: Response) => {
     const { motif_refus } = req.body || {};
 
     await query(
-      `UPDATE v_action_valider_attestation_rc
+      `UPDATE public.v_action_valider_attestation_rc
        SET decision = $1, motif_refus = $2, secretaire_id = $3
        WHERE etudiant_id = $4`,
       ['REFUSER', motif_refus || null, secretaireId, etudiantId]
     );
 
     return res.status(200).json({ ok: true, message: 'Attestation RC refusée' });
-
   } catch (error: any) {
     console.error('Erreur refus RC:', error);
     return res.status(400).json({ ok: false, error: error.message || 'Erreur refus RC' });
@@ -149,59 +149,153 @@ export const refuserAttestationRC = async (req: Request, res: Response) => {
 };
 
 /* =========================================================
-   CRÉATION ÉTUDIANT (ton code inchangé)
+   GESTION ÉTUDIANTS (100% VUES)
    ========================================================= */
 
-// POST /api/dashboard/secretaire/etudiants
-export const creerEtudiant = async (req: Request, res: Response) => {
-  const { nom, prenom, email, password, formation, promo } = req.body;
-
-  if (!nom || !prenom || !email || !password || !formation) {
-    return res.status(400).json({ error: "Tous les champs sont obligatoires" });
-  }
-
-  const client = await getClient();
-
+// GET /api/dashboard/secretaire/etudiants?userId=...
+export const listerEtudiants = async (req: Request, res: Response) => {
   try {
-    await client.query('BEGIN');
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(400).json({ ok: false, error: 'userId manquant' });
 
-    const checkEmail = await client.query('SELECT id FROM "Utilisateur" WHERE email = $1', [email]);
-    if (checkEmail.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return res.status(409).json({ error: "Cet email est déjà utilisé" });
+    // sécurité: vérifier que c'est bien une secrétaire
+    const secretaireId = await getSecretaireIdFromUserId(userId);
+    if (!secretaireId) {
+      return res.status(403).json({ ok: false, error: 'Accès interdit (profil secrétaire introuvable)' });
     }
 
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    // ✅ uniquement une vue
+    const result = await query(`
+      SELECT
+        utilisateur_id,
+        email,
+        role,
+        etudiant_id,
+        nom,
+        prenom,
+        formation,
+        promo,
+        en_recherche,
+        profil_visible,
+        cv_url
+      FROM public.v_profil_etudiant
+      ORDER BY etudiant_id DESC
+      LIMIT 200
+    `);
 
-    const userQuery = `
-      INSERT INTO "Utilisateur" (email, password_hash, role, actif, nom)
-      VALUES ($1, $2, 'ETUDIANT', true, $3)
-      RETURNING id
-    `;
-    const userRes = await client.query(userQuery, [email, passwordHash, nom]);
-    const newUserId = userRes.rows[0].id;
+    return res.status(200).json({ ok: true, etudiants: result.rows });
+  } catch (error: any) {
+    console.error('Erreur liste étudiants:', error);
+    return res.status(500).json({ ok: false, error: 'Erreur lors de la récupération des étudiants' });
+  }
+};
 
-    const etudiantQuery = `
-      INSERT INTO "Etudiant" (utilisateur_id, nom, prenom, formation, promo, en_recherche)
-      VALUES ($1, $2, $3, $4, $5, true)
-      RETURNING etudiant_id
-    `;
-    await client.query(etudiantQuery, [newUserId, nom, prenom, formation, promo]);
+// POST /api/dashboard/secretaire/etudiants?userId=...
+export const creerEtudiant = async (req: Request, res: Response) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(400).json({ ok: false, error: 'userId manquant' });
 
-    await client.query('COMMIT');
+    // sécurité côté Node (en plus de la BDD)
+    const secretaireId = await getSecretaireIdFromUserId(userId);
+    if (!secretaireId) {
+      return res.status(403).json({ ok: false, error: 'Accès interdit (profil secrétaire introuvable)' });
+    }
 
-    return res.status(201).json({
-      ok: true,
-      message: "Compte étudiant créé avec succès",
-      id: newUserId
-    });
+    const { nom, prenom, email, password, formation, promo } = req.body;
 
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error("Erreur création étudiant:", error);
-    return res.status(500).json({ error: "Erreur lors de la création de l'étudiant" });
-  } finally {
-    client.release();
+    if (!nom || !prenom || !email || !password || !formation) {
+      return res.status(400).json({ ok: false, error: 'Tous les champs obligatoires doivent être remplis' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(String(email))) {
+      return res.status(400).json({ ok: false, error: 'Email invalide' });
+    }
+
+    if (String(password).length < 6) {
+      return res.status(400).json({ ok: false, error: 'Mot de passe trop court (min 6 caractères)' });
+    }
+
+    // ✅ bcrypt hash attendu par le trigger (NEW.password_hash)
+    const passwordHash = await bcrypt.hash(String(password), 10);
+
+    // ✅ (recommandé) transaction côté Node pour être clean
+    const client = await getClient();
+    try {
+      await client.query('BEGIN');
+
+      const r = await client.query(
+        `
+        INSERT INTO public.v_action_creer_etudiant
+          (secretaire_utilisateur_id, email, password_hash, nom, prenom, formation, promo)
+        VALUES
+          ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING utilisateur_id_created, etudiant_id_created
+        `,
+        [userId, email, passwordHash, nom, prenom, formation, promo || null]
+      );
+
+      await client.query('COMMIT');
+
+      return res.status(201).json({
+        ok: true,
+        message: 'Compte étudiant créé avec succès',
+        utilisateurId: r.rows[0]?.utilisateur_id_created,
+        etudiantId: r.rows[0]?.etudiant_id_created
+      });
+    } catch (error: any) {
+      await client.query('ROLLBACK');
+
+      console.error('Erreur création étudiant (via vue):', error);
+      const msg = String(error?.message || '');
+
+      if (msg.includes('Accès interdit')) {
+        return res.status(403).json({ ok: false, error: msg });
+      }
+      if (msg.toLowerCase().includes('email')) {
+        return res.status(409).json({ ok: false, error: msg });
+      }
+
+      return res.status(400).json({ ok: false, error: msg || "Erreur lors de la création de l'étudiant" });
+    } finally {
+      client.release();
+    }
+  } catch (error: any) {
+    console.error('Erreur création étudiant (outer):', error);
+    return res.status(500).json({ ok: false, error: 'Erreur serveur' });
+  }
+};
+
+/* =========================================================
+  Profil Secretaire (100% VUES)
+   ========================================================= */
+
+export const getProfilSecretaire = async (req: Request, res: Response) => {
+  try {
+    const userIdRaw = req.query.userId;
+    if (!userIdRaw || Array.isArray(userIdRaw) || isNaN(Number(userIdRaw))) {
+      return res.status(400).json({ ok: false, error: 'userId manquant' });
+    }
+    const userId = Number(userIdRaw);
+
+    // secrétaire OU remplaçant actif
+    const secretaireId = await getSecretaireIdFromUserId(userId);
+    if (!secretaireId) return res.status(403).json({ ok: false, error: 'Accès interdit' });
+
+    const r = await query(
+      `SELECT utilisateur_id, nom, email, role, actif, created_at, secretaire_id, en_conge
+       FROM public.v_profil_secretaire
+       WHERE secretaire_id = $1
+       LIMIT 1`,
+      [secretaireId]
+    );
+
+    if (r.rows.length === 0) return res.status(404).json({ ok: false, error: 'Profil introuvable' });
+
+    return res.json({ ok: true, profil: r.rows[0] });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ ok: false, error: 'Erreur profil secrétaire' });
   }
 };

@@ -7,7 +7,8 @@ import {
     getDashboardStats,
     getOffresConformite,
     reviewOffre,
-    getArchivesStages
+    getArchivesStages,
+    getDelegationSecretaireActive
 } from '../controllers/enseignantController';
 
 const router = Router();
@@ -25,5 +26,8 @@ router.post('/offres/:id/review', reviewOffre);
 
 // ==================== ARCHIVES ====================
 router.get('/archives', getArchivesStages);
+
+// ==================== DÉLÉGATION SECRÉTAIRE ====================
+router.get('/delegation/secretaire', getDelegationSecretaireActive);
 
 export default router;
