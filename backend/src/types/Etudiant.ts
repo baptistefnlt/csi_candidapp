@@ -4,7 +4,7 @@ export interface Etudiant {
     nom: string;
     prenom: string;
     formation: string;
-    promo?: string;
+    promo: number;
     cv_url?: string;
     en_recherche: boolean;
     profil_visible: boolean;

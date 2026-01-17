@@ -6,7 +6,7 @@ create type rc_statut_enum as enum ('EN_ATTENTE', 'VALIDE', 'REFUSE');
 
 alter type rc_statut_enum owner to m1user1_02;
 
-create type offre_type_enum as enum ('STAGE', 'ALTERNANCE', 'EMPLOI', 'VIE');
+create type offre_type_enum as enum ('STAGE', 'ALTERNANCE', 'CDD', '');
 
 alter type offre_type_enum owner to m1user1_02;
 
@@ -26,9 +26,33 @@ create type journal_type_enum as enum ('CONNEXION', 'CREATION', 'MODIFICATION', 
 
 alter type journal_type_enum owner to m1user1_02;
 
-create type notification_type_enum as enum ('OFFRE_SOUMISE', 'OFFRE_VALIDEE', 'OFFRE_REFUSEE', 'CANDIDATURE_RECUE', 'CANDIDATURE_ACCEPTEE', 'CANDIDATURE_REJETEE', 'AFFECTATION_VALIDEE', 'RC_VALIDEE', 'RC_REFUSEE', 'SYSTEME');
+create type notification_type_enum as enum ('OFFRE_SOUMISE', 'OFFRE_VALIDEE', 'OFFRE_REFUSEE', 'CANDIDATURE_RECUE', 'CANDIDATURE_ACCEPTEE', 'CANDIDATURE_REJETEE', 'AFFECTATION_VALIDEE', 'RC_VALIDEE', 'RC_REFUSEE', 'SYSTEME', 'RC_EXPIRATION_PROCHE');
 
 alter type notification_type_enum owner to m1user1_02;
+
+-- Unknown how to generate base type type
+
+alter type gbtreekey4 owner to m1user1_04;
+
+-- Unknown how to generate base type type
+
+alter type gbtreekey8 owner to m1user1_04;
+
+-- Unknown how to generate base type type
+
+alter type gbtreekey16 owner to m1user1_04;
+
+-- Unknown how to generate base type type
+
+alter type gbtreekey32 owner to m1user1_04;
+
+-- Unknown how to generate base type type
+
+alter type gbtreekey_var owner to m1user1_04;
+
+-- Unknown how to generate base type type
+
+alter type gbtreekey2 owner to m1user1_04;
 
 create table "Utilisateur"
 (
@@ -44,27 +68,6 @@ create table "Utilisateur"
 );
 
 alter table "Utilisateur"
-    owner to m1user1_02;
-
-create table "Etudiant"
-(
-    etudiant_id    serial
-        primary key,
-    utilisateur_id integer not null
-        unique
-        constraint fk_etudiant_user
-            references "Utilisateur"
-            on delete cascade,
-    nom            text    not null,
-    prenom         text    not null,
-    formation      text    not null,
-    promo          text,
-    en_recherche   boolean default false,
-    profil_visible boolean default false,
-    cv_url         text
-);
-
-alter table "Etudiant"
     owner to m1user1_02;
 
 create table "Entreprise"
@@ -97,7 +100,8 @@ create table "Enseignant"
         unique
         constraint fk_enseignant_user
             references "Utilisateur"
-            on delete cascade
+            on delete cascade,
+    promo          integer
 );
 
 alter table "Enseignant"
@@ -112,29 +116,11 @@ create table "Secretaire"
         constraint fk_secretaire_user
             references "Utilisateur"
             on delete cascade,
-    en_conge       boolean
+    en_conge       boolean,
+    promo          integer
 );
 
 alter table "Secretaire"
-    owner to m1user1_02;
-
-create table "AttestationRC"
-(
-    etudiant_id     integer                   not null
-        primary key
-        constraint fk_attestation_etudiant
-            references "Etudiant"
-            on delete cascade,
-    statut          rc_statut_enum            not null,
-    fichier_url     text                      not null,
-    date_depot      date default CURRENT_DATE not null,
-    date_validation date,
-    date_expiration date not null default make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int + 1, 1, 1)
-);
-
-comment on column "AttestationRC".date_expiration is 'Date d''expiration de l''attestation (1er janvier de l''année suivante)';
-
-alter table "AttestationRC"
     owner to m1user1_02;
 
 create table "Offre"
@@ -202,6 +188,144 @@ create table "Offre_RegleLegale"
 alter table "Offre_RegleLegale"
     owner to m1user1_02;
 
+create table "JournalEvenement"
+(
+    id             bigserial
+        primary key,
+    utilisateur_id integer
+        constraint fk_journal_user
+            references "Utilisateur"
+            on delete set null,
+    type           journal_type_enum not null,
+    payload        text,
+    created_at     timestamp with time zone default now()
+);
+
+alter table "JournalEvenement"
+    owner to m1user1_02;
+
+create table "Notification"
+(
+    notification_id serial
+        primary key,
+    destinataire_id integer                                not null
+        references "Utilisateur"
+            on delete cascade,
+    type            notification_type_enum                 not null,
+    titre           varchar(100)                           not null,
+    message         text                                   not null,
+    lien            varchar(255),
+    entite_type     varchar(50),
+    entite_id       integer,
+    lu              boolean                  default false not null,
+    created_at      timestamp with time zone default now() not null
+);
+
+comment on table "Notification" is 'Notifications internes pour les utilisateurs';
+
+comment on column "Notification".entite_type is 'Type d''entité liée : offre, candidature, attestation';
+
+comment on column "Notification".entite_id is 'ID de l''entité liée pour navigation';
+
+alter table "Notification"
+    owner to m1user1_02;
+
+create index idx_notification_destinataire
+    on "Notification" (destinataire_id);
+
+create index idx_notification_non_lues
+    on "Notification" (destinataire_id, lu)
+    where (lu = false);
+
+create index idx_notification_created
+    on "Notification" (created_at desc);
+
+create table "CongeSecretaire"
+(
+    conge_id                  serial
+        primary key,
+    secretaire_id             integer                                not null
+        references "Secretaire"
+            on delete cascade,
+    date_debut                date                                   not null,
+    date_fin                  date                                   not null,
+    remplacant_utilisateur_id integer
+                                                                     references "Utilisateur"
+                                                                         on delete set null,
+    motif                     text,
+    annule                    boolean                  default false not null,
+    created_at                timestamp with time zone default now() not null,
+    constraint conge_no_overlap
+        exclude using gist (secretaire_id with =, daterange(date_debut, date_fin, '[]'::text) with &&),
+    constraint chk_conge_dates
+        check (date_fin >= date_debut)
+);
+
+alter table "CongeSecretaire"
+    owner to m1user1_04;
+
+create table "GroupeEtudiant"
+(
+    groupe_id                  serial
+        primary key,
+    nom_groupe                 varchar(50) not null,
+    annee_scolaire             integer     not null,
+    enseignant_referent_id     integer     not null
+        constraint fk_groupe_enseignant
+            references "Enseignant",
+    secretaire_gestionnaire_id integer     not null
+        constraint fk_groupe_secretaire
+            references "Secretaire"
+);
+
+alter table "GroupeEtudiant"
+    owner to m1user1_02;
+
+create table "Etudiant"
+(
+    etudiant_id    serial
+        primary key,
+    utilisateur_id integer not null
+        unique
+        constraint fk_etudiant_user
+            references "Utilisateur"
+            on delete cascade,
+    nom            text    not null,
+    prenom         text    not null,
+    formation      text    not null,
+    en_recherche   boolean default false,
+    profil_visible boolean default false,
+    cv_url         text,
+    promo          integer,
+    groupe_id      integer
+        constraint fk_etudiant_groupe
+            references "GroupeEtudiant"
+            on delete set null
+);
+
+alter table "Etudiant"
+    owner to m1user1_02;
+
+create index idx_etudiant_groupe
+    on "Etudiant" (groupe_id);
+
+create table "AttestationRC"
+(
+    etudiant_id     integer                   not null
+        primary key
+        constraint fk_attestation_etudiant
+            references "Etudiant"
+            on delete cascade,
+    statut          rc_statut_enum            not null,
+    fichier_url     text                      not null,
+    date_depot      date default CURRENT_DATE not null,
+    date_validation date,
+    date_expiration date default make_date(((EXTRACT(year FROM CURRENT_DATE))::integer + 1), 1, 1)
+);
+
+alter table "AttestationRC"
+    owner to m1user1_02;
+
 create table "Candidature"
 (
     id               serial
@@ -255,58 +379,6 @@ create table "Renoncement"
 alter table "Renoncement"
     owner to m1user1_02;
 
-create table "JournalEvenement"
-(
-    id             bigserial
-        primary key,
-    utilisateur_id integer
-        constraint fk_journal_user
-            references "Utilisateur"
-            on delete set null,
-    type           journal_type_enum not null,
-    payload        text,
-    created_at     timestamp with time zone default now()
-);
-
-alter table "JournalEvenement"
-    owner to m1user1_02;
-
-create table "Notification"
-(
-    notification_id serial
-        primary key,
-    destinataire_id integer                                not null
-        references "Utilisateur"
-            on delete cascade,
-    type            notification_type_enum                 not null,
-    titre           varchar(100)                           not null,
-    message         text                                   not null,
-    lien            varchar(255),
-    entite_type     varchar(50),
-    entite_id       integer,
-    lu              boolean                  default false not null,
-    created_at      timestamp with time zone default now() not null
-);
-
-comment on table "Notification" is 'Notifications internes pour les utilisateurs';
-
-comment on column "Notification".entite_type is 'Type d''entité liée : offre, candidature, attestation';
-
-comment on column "Notification".entite_id is 'ID de l''entité liée pour navigation';
-
-alter table "Notification"
-    owner to m1user1_02;
-
-create index idx_notification_destinataire
-    on "Notification" (destinataire_id);
-
-create index idx_notification_non_lues
-    on "Notification" (destinataire_id, lu)
-    where (lu = false);
-
-create index idx_notification_created
-    on "Notification" (created_at desc);
-
 create view v_offres_visibles_etudiant
             (offre_id, entreprise_nom, entreprise_site, entreprise_ville, titre, type, description, competences,
              localisation_ville, localisation_pays, duree_mois, remuneration, date_debut, date_expiration, est_expiree)
@@ -333,7 +405,13 @@ WHERE o.statut_validation = 'VALIDE'::validation_statut_enum;
 alter table v_offres_visibles_etudiant
     owner to m1user1_02;
 
+grant select on v_offres_visibles_etudiant to role_secretaire;
+
+grant select on v_offres_visibles_etudiant to role_enseignant;
+
 grant select on v_offres_visibles_etudiant to role_etudiant;
+
+grant select on v_offres_visibles_etudiant to role_entreprise;
 
 create view v_profil_entreprise
             (utilisateur_id, email, role, entreprise_id, raison_sociale, siret, pays, ville, adresse, site_web,
@@ -355,26 +433,6 @@ FROM "Utilisateur" u
          JOIN "Entreprise" e ON u.id = e.utilisateur_id;
 
 alter table v_profil_entreprise
-    owner to m1user1_02;
-
-create view v_profil_etudiant
-            (utilisateur_id, email, role, etudiant_id, nom, prenom, formation, promo, en_recherche, profil_visible,
-             cv_url) as
-SELECT u.id AS utilisateur_id,
-       u.email,
-       u.role,
-       et.etudiant_id,
-       et.nom,
-       et.prenom,
-       et.formation,
-       et.promo,
-       et.en_recherche,
-       et.profil_visible,
-       et.cv_url
-FROM "Utilisateur" u
-         JOIN "Etudiant" et ON u.id = et.utilisateur_id;
-
-alter table v_profil_etudiant
     owner to m1user1_02;
 
 create view v_sys_auth_modification(id, email, password_hash) as
@@ -596,27 +654,6 @@ alter table v_referentiel_legal
 
 grant select on v_referentiel_legal to role_enseignant;
 
-create view v_archives_stages
-            (affectation_id, etudiant_nom_complet, etudiant_promo, entreprise_nom, offre_titre, date_debut_stage,
-             date_fin_stage, date_validation_finale)
-as
-SELECT a.id                                                                 AS affectation_id,
-       (e.nom || ' '::text) || e.prenom                                     AS etudiant_nom_complet,
-       e.promo                                                              AS etudiant_promo,
-       ent.raison_sociale                                                   AS entreprise_nom,
-       o.titre                                                              AS offre_titre,
-       o.date_debut                                                         AS date_debut_stage,
-       (o.date_debut + ((o.duree_mois || ' months'::text)::interval))::date AS date_fin_stage,
-       a.date_validation                                                    AS date_validation_finale
-FROM "Affectation" a
-         JOIN "Candidature" c ON a.candidature_id = c.id
-         JOIN "Etudiant" e ON c.etudiant_id = e.etudiant_id
-         JOIN "Offre" o ON c.offre_id = o.id
-         JOIN "Entreprise" ent ON o.entreprise_id = ent.entreprise_id;
-
-alter table v_archives_stages
-    owner to m1user1_02;
-
 create view v_dashboard_secretaire_stats
             (nb_etudiants_total, nb_etudiants_en_recherche, nb_attestations_a_valider, nb_stages_actes,
              nb_entreprises_partenaires) as
@@ -726,24 +763,6 @@ FROM "Candidature" c
 alter table v_action_entreprise_decider_candidature
     owner to m1user1_04;
 
-create view v_attestations_rc_a_valider(etudiant_id, nom, prenom, promo, fichier_url, date_depot, statut) as
-SELECT a.etudiant_id,
-       e.nom,
-       e.prenom,
-       e.promo,
-       a.fichier_url,
-       a.date_depot,
-       a.statut
-FROM "AttestationRC" a
-         JOIN "Etudiant" e ON e.etudiant_id = a.etudiant_id
-WHERE a.statut = 'EN_ATTENTE'::rc_statut_enum
-ORDER BY a.date_depot DESC;
-
-alter table v_attestations_rc_a_valider
-    owner to m1user1_04;
-
-grant select on v_attestations_rc_a_valider to role_secretaire;
-
 create view v_action_valider_attestation_rc
             (etudiant_id, statut, date_validation, decision, motif_refus, secretaire_id) as
 SELECT a.etudiant_id,
@@ -759,34 +778,28 @@ alter table v_action_valider_attestation_rc
 
 grant select, update on v_action_valider_attestation_rc to role_secretaire;
 
-create view v_secretaire_by_user(secretaire_id, utilisateur_id) as
-SELECT "Secretaire".secretaire_id,
-       "Secretaire".utilisateur_id
-FROM "Secretaire";
-
-alter table v_secretaire_by_user
-    owner to m1user1_04;
-
 create view v_attestation_rc_etudiant
-    (utilisateur_id, etudiant_id, statut, fichier_url, date_depot, date_validation, date_expiration, est_expiree, jours_restants)
+            (utilisateur_id, etudiant_id, statut, fichier_url, date_depot, date_validation, date_expiration,
+             est_expiree, jours_restants)
 as
-SELECT u.id AS utilisateur_id,
+SELECT u.id    AS utilisateur_id,
        e.etudiant_id,
        a.statut,
        a.fichier_url,
        a.date_depot,
        a.date_validation,
        a.date_expiration,
-       CASE WHEN a.date_expiration <= CURRENT_DATE THEN true ELSE false END AS est_expiree,
        CASE
-           WHEN a.date_expiration IS NULL THEN NULL
+           WHEN a.date_expiration <= CURRENT_DATE THEN true
+           ELSE false
+           END AS est_expiree,
+       CASE
+           WHEN a.date_expiration IS NULL THEN NULL::integer
            ELSE GREATEST(0, a.date_expiration - CURRENT_DATE)
-       END AS jours_restants
+           END AS jours_restants
 FROM "Utilisateur" u
          JOIN "Etudiant" e ON e.utilisateur_id = u.id
          LEFT JOIN "AttestationRC" a ON a.etudiant_id = e.etudiant_id;
-
-comment on view v_attestation_rc_etudiant is 'Vue attestation RC avec statut d''expiration';
 
 alter table v_attestation_rc_etudiant
     owner to m1user1_03;
@@ -881,6 +894,186 @@ FROM "Notification";
 
 alter table v_action_marquer_notification_lue
     owner to m1user1_02;
+
+create view v_auth_login(id, email, password_hash, role, nom, actif) as
+SELECT u.id,
+       u.email,
+       u.password_hash,
+       u.role,
+       u.nom,
+       u.actif
+FROM "Utilisateur" u;
+
+alter table v_auth_login
+    owner to m1user1_04;
+
+create view v_liste_enseignants(utilisateur_id, nom, email, enseignant_id) as
+SELECT u.id AS utilisateur_id,
+       u.nom,
+       u.email,
+       e.enseignant_id
+FROM "Enseignant" e
+         JOIN "Utilisateur" u ON u.id = e.utilisateur_id
+WHERE u.actif = true;
+
+alter table v_liste_enseignants
+    owner to m1user1_04;
+
+create view v_secretaire_autorise_by_user(secretaire_id, utilisateur_id, mode) as
+SELECT s.secretaire_id,
+       s.utilisateur_id,
+       'SECRETAIRE'::text AS mode
+FROM "Secretaire" s
+UNION ALL
+SELECT c.secretaire_id,
+       c.remplacant_utilisateur_id AS utilisateur_id,
+       'REMPLACANT'::text          AS mode
+FROM "CongeSecretaire" c
+WHERE c.annule = false
+  AND c.remplacant_utilisateur_id IS NOT NULL
+  AND CURRENT_DATE >= c.date_debut
+  AND CURRENT_DATE <= c.date_fin;
+
+alter table v_secretaire_autorise_by_user
+    owner to m1user1_04;
+
+create view v_delegation_secretaire_active_by_user(conge_id, secretaire_id, utilisateur_id, date_debut, date_fin, motif) as
+SELECT c.conge_id,
+       c.secretaire_id,
+       c.remplacant_utilisateur_id AS utilisateur_id,
+       c.date_debut,
+       c.date_fin,
+       c.motif
+FROM "CongeSecretaire" c
+WHERE c.annule = false
+  AND c.remplacant_utilisateur_id IS NOT NULL
+  AND CURRENT_DATE >= c.date_debut
+  AND CURRENT_DATE <= c.date_fin;
+
+alter table v_delegation_secretaire_active_by_user
+    owner to m1user1_04;
+
+create view v_mes_conges_secretaire
+            (utilisateur_id, conge_id, secretaire_id, date_debut, date_fin, motif, annule, created_at,
+             remplacant_utilisateur_id, remplacant_nom, remplacant_email)
+as
+SELECT s.utilisateur_id,
+       c.conge_id,
+       c.secretaire_id,
+       c.date_debut,
+       c.date_fin,
+       c.motif,
+       c.annule,
+       c.created_at,
+       c.remplacant_utilisateur_id,
+       ru.nom   AS remplacant_nom,
+       ru.email AS remplacant_email
+FROM "CongeSecretaire" c
+         JOIN "Secretaire" s ON s.secretaire_id = c.secretaire_id
+         LEFT JOIN "Utilisateur" ru ON ru.id = c.remplacant_utilisateur_id;
+
+alter table v_mes_conges_secretaire
+    owner to m1user1_04;
+
+create view v_action_declarer_conge_secretaire
+            (conge_id, secretaire_id, date_debut, date_fin, remplacant_utilisateur_id, motif) as
+SELECT c.conge_id,
+       c.secretaire_id,
+       c.date_debut,
+       c.date_fin,
+       c.remplacant_utilisateur_id,
+       c.motif
+FROM "CongeSecretaire" c;
+
+alter table v_action_declarer_conge_secretaire
+    owner to m1user1_04;
+
+create view v_profil_secretaire (utilisateur_id, nom, email, role, actif, created_at, secretaire_id, en_conge) as
+SELECT u.id                          AS utilisateur_id,
+       u.nom,
+       u.email,
+       u.role,
+       u.actif,
+       u.created_at,
+       s.secretaire_id,
+       COALESCE(sec.en_conge, false) AS en_conge
+FROM "Secretaire" s
+         JOIN "Utilisateur" u ON u.id = s.utilisateur_id
+         LEFT JOIN v_secretaire_en_conge sec ON sec.secretaire_id = s.secretaire_id;
+
+alter table v_profil_secretaire
+    owner to m1user1_04;
+
+create view v_secretaire_en_conge(secretaire_id, en_conge) as
+SELECT v_mes_conges_secretaire.secretaire_id,
+       true AS en_conge
+FROM v_mes_conges_secretaire
+WHERE v_mes_conges_secretaire.annule = false
+  AND CURRENT_DATE >= v_mes_conges_secretaire.date_debut
+  AND CURRENT_DATE <= v_mes_conges_secretaire.date_fin
+GROUP BY v_mes_conges_secretaire.secretaire_id;
+
+alter table v_secretaire_en_conge
+    owner to m1user1_04;
+
+create view v_profil_etudiant
+            (utilisateur_id, email, role, etudiant_id, nom, prenom, promo, formation, en_recherche, profil_visible,
+             cv_url) as
+SELECT u.id AS utilisateur_id,
+       u.email,
+       u.role,
+       et.etudiant_id,
+       et.nom,
+       et.prenom,
+       et.promo,
+       et.formation,
+       et.en_recherche,
+       et.profil_visible,
+       et.cv_url
+FROM "Utilisateur" u
+         JOIN "Etudiant" et ON u.id = et.utilisateur_id;
+
+alter table v_profil_etudiant
+    owner to m1user1_02;
+
+create view v_archives_stages
+            (affectation_id, etudiant_nom_complet, etudiant_promo, entreprise_nom, offre_titre, date_debut_stage,
+             date_fin_stage, date_validation_finale)
+as
+SELECT a.id                                                                 AS affectation_id,
+       (e.nom || ' '::text) || e.prenom                                     AS etudiant_nom_complet,
+       e.promo                                                              AS etudiant_promo,
+       ent.raison_sociale                                                   AS entreprise_nom,
+       o.titre                                                              AS offre_titre,
+       o.date_debut                                                         AS date_debut_stage,
+       (o.date_debut + ((o.duree_mois || ' months'::text)::interval))::date AS date_fin_stage,
+       a.date_validation                                                    AS date_validation_finale
+FROM "Affectation" a
+         JOIN "Candidature" c ON a.candidature_id = c.id
+         JOIN "Etudiant" e ON c.etudiant_id = e.etudiant_id
+         JOIN "Offre" o ON c.offre_id = o.id
+         JOIN "Entreprise" ent ON o.entreprise_id = ent.entreprise_id;
+
+alter table v_archives_stages
+    owner to m1user1_02;
+
+create view v_attestations_rc_a_valider(etudiant_id, nom, prenom, fichier_url, date_depot, promo, statut) as
+SELECT a.etudiant_id,
+       e.nom,
+       e.prenom,
+       a.fichier_url,
+       a.date_depot,
+       e.promo,
+       a.statut
+FROM "AttestationRC" a
+         JOIN "Etudiant" e ON e.etudiant_id = a.etudiant_id
+WHERE a.statut = 'EN_ATTENTE'::rc_statut_enum
+ORDER BY a.date_depot DESC;
+
+alter table v_attestations_rc_a_valider
+    owner to m1user1_04;
+
+grant select on v_attestations_rc_a_valider to role_secretaire;
 
 create function trg_action_postuler_func() returns trigger
     language plpgsql
@@ -1181,71 +1374,45 @@ DECLARE
     v_date_expiration_existante date;
     v_nouvelle_date_expiration date;
 BEGIN
-    -- Calculer la date d'expiration : 1er janvier de l'année suivante
     v_nouvelle_date_expiration := make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int + 1, 1, 1);
 
-    -- On regarde si une attestation existe déjà pour cet étudiant
     SELECT statut, date_expiration
     INTO v_statut_existant, v_date_expiration_existante
     FROM "AttestationRC"
     WHERE etudiant_id = NEW.etudiant_id;
 
-    -- Cas A : aucune attestation existante -> insertion
+    -- Cas A : aucune attestation -> insertion
     IF NOT FOUND THEN
-        INSERT INTO "AttestationRC" (
-            etudiant_id,
-            statut,
-            fichier_url,
-            date_depot,
-            date_validation,
-            date_expiration
-        ) VALUES (
-            NEW.etudiant_id,
-            'EN_ATTENTE',
-            NEW.fichier_url,
-            CURRENT_DATE,
-            NULL,
-            v_nouvelle_date_expiration
-        );
-
+        INSERT INTO "AttestationRC" (etudiant_id, statut, fichier_url, date_depot, date_validation, date_expiration)
+        VALUES (NEW.etudiant_id, 'EN_ATTENTE', NEW.fichier_url, CURRENT_DATE, NULL, v_nouvelle_date_expiration);
         RETURN NEW;
     END IF;
 
-    -- Cas B : attestation REFUSE -> redépôt autorisé
+    -- Cas B : REFUSE -> redépôt
     IF v_statut_existant = 'REFUSE' THEN
         UPDATE "AttestationRC"
-        SET fichier_url     = NEW.fichier_url,
-            statut          = 'EN_ATTENTE',
-            date_depot      = CURRENT_DATE,
-            date_validation = NULL,
-            date_expiration = v_nouvelle_date_expiration
+        SET fichier_url = NEW.fichier_url, statut = 'EN_ATTENTE', date_depot = CURRENT_DATE,
+            date_validation = NULL, date_expiration = v_nouvelle_date_expiration
         WHERE etudiant_id = NEW.etudiant_id;
-
         RETURN NEW;
     END IF;
 
-    -- Cas C : attestation VALIDE mais EXPIREE -> redépôt autorisé
+    -- Cas C : VALIDE mais expirée -> redépôt
     IF v_statut_existant = 'VALIDE' AND v_date_expiration_existante <= CURRENT_DATE THEN
         UPDATE "AttestationRC"
-        SET fichier_url     = NEW.fichier_url,
-            statut          = 'EN_ATTENTE',
-            date_depot      = CURRENT_DATE,
-            date_validation = NULL,
-            date_expiration = v_nouvelle_date_expiration
+        SET fichier_url = NEW.fichier_url, statut = 'EN_ATTENTE', date_depot = CURRENT_DATE,
+            date_validation = NULL, date_expiration = v_nouvelle_date_expiration
         WHERE etudiant_id = NEW.etudiant_id;
-
         RETURN NEW;
     END IF;
 
-    -- Cas D : VALIDE non expirée -> dépôt interdit
+    -- Cas D : VALIDE non expirée -> interdit
     IF v_statut_existant = 'VALIDE' THEN
-        RAISE EXCEPTION 'Dépôt impossible : votre attestation RC est encore valide jusqu''au %.',
-            to_char(v_date_expiration_existante, 'DD/MM/YYYY');
+        RAISE EXCEPTION 'Dépôt impossible : attestation valide jusqu''au %.', to_char(v_date_expiration_existante, 'DD/MM/YYYY');
     END IF;
 
-    -- Cas E : EN_ATTENTE -> dépôt interdit
-    RAISE EXCEPTION 'Dépôt impossible : une attestation RC est déjà en attente de validation.';
-
+    -- Cas E : EN_ATTENTE -> interdit
+    RAISE EXCEPTION 'Dépôt impossible : attestation déjà en attente de validation.';
 END;
 $$;
 
@@ -1509,26 +1676,2672 @@ $$;
 
 alter function creer_notification(integer, notification_type_enum, text, text, text, text, integer) owner to m1user1_03;
 
-create function fn_creer_notification(p_destinataire_id integer, p_type notification_type_t, p_titre character varying, p_message text, p_lien character varying DEFAULT NULL::character varying, p_entite_type character varying DEFAULT NULL::character varying, p_entite_id integer DEFAULT NULL::integer) returns integer
+create function gbtreekey4_in(cstring) returns gbtreekey4
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey4_in(cstring) owner to m1user1_04;
+
+create function gbtreekey4_out(gbtreekey4) returns cstring
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey4_out(gbtreekey4) owner to m1user1_04;
+
+create function gbtreekey8_in(cstring) returns gbtreekey8
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey8_in(cstring) owner to m1user1_04;
+
+create function gbtreekey8_out(gbtreekey8) returns cstring
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey8_out(gbtreekey8) owner to m1user1_04;
+
+create function gbtreekey16_in(cstring) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey16_in(cstring) owner to m1user1_04;
+
+create function gbtreekey16_out(gbtreekey16) returns cstring
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey16_out(gbtreekey16) owner to m1user1_04;
+
+create function gbtreekey32_in(cstring) returns gbtreekey32
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey32_in(cstring) owner to m1user1_04;
+
+create function gbtreekey32_out(gbtreekey32) returns cstring
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey32_out(gbtreekey32) owner to m1user1_04;
+
+create function gbtreekey_var_in(cstring) returns gbtreekey_var
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey_var_in(cstring) owner to m1user1_04;
+
+create function gbtreekey_var_out(gbtreekey_var) returns cstring
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey_var_out(gbtreekey_var) owner to m1user1_04;
+
+create function cash_dist(money, money) returns money
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function cash_dist(money, money) owner to m1user1_04;
+
+create function date_dist(date, date) returns integer
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function date_dist(date, date) owner to m1user1_04;
+
+create function float4_dist(real, real) returns real
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function float4_dist(real, real) owner to m1user1_04;
+
+create function float8_dist(double precision, double precision) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function float8_dist(double precision, double precision) owner to m1user1_04;
+
+create function int2_dist(smallint, smallint) returns smallint
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function int2_dist(smallint, smallint) owner to m1user1_04;
+
+create function int4_dist(integer, integer) returns integer
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function int4_dist(integer, integer) owner to m1user1_04;
+
+create function int8_dist(bigint, bigint) returns bigint
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function int8_dist(bigint, bigint) owner to m1user1_04;
+
+create function interval_dist(interval, interval) returns interval
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function interval_dist(interval, interval) owner to m1user1_04;
+
+create function oid_dist(oid, oid) returns oid
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function oid_dist(oid, oid) owner to m1user1_04;
+
+create function time_dist(time, time) returns interval
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function time_dist(time, time) owner to m1user1_04;
+
+create function ts_dist(timestamp, timestamp) returns interval
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function ts_dist(timestamp, timestamp) owner to m1user1_04;
+
+create function tstz_dist(timestamp with time zone, timestamp with time zone) returns interval
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function tstz_dist(timestamp with time zone, timestamp with time zone) owner to m1user1_04;
+
+create function gbt_oid_consistent(internal, oid, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_consistent(internal, oid, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_oid_distance(internal, oid, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_distance(internal, oid, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_oid_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_fetch(internal) owner to m1user1_04;
+
+create function gbt_oid_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_compress(internal) owner to m1user1_04;
+
+create function gbt_decompress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_decompress(internal) owner to m1user1_04;
+
+create function gbt_var_decompress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_var_decompress(internal) owner to m1user1_04;
+
+create function gbt_var_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_var_fetch(internal) owner to m1user1_04;
+
+create function gbt_oid_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_oid_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_oid_union(internal, internal) returns gbtreekey8
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_union(internal, internal) owner to m1user1_04;
+
+create function gbt_oid_same(gbtreekey8, gbtreekey8, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_oid_same(gbtreekey8, gbtreekey8, internal) owner to m1user1_04;
+
+create function gbt_int2_consistent(internal, smallint, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_consistent(internal, smallint, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_int2_distance(internal, smallint, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_distance(internal, smallint, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_int2_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_compress(internal) owner to m1user1_04;
+
+create function gbt_int2_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_fetch(internal) owner to m1user1_04;
+
+create function gbt_int2_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_int2_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_int2_union(internal, internal) returns gbtreekey4
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_union(internal, internal) owner to m1user1_04;
+
+create function gbt_int2_same(gbtreekey4, gbtreekey4, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int2_same(gbtreekey4, gbtreekey4, internal) owner to m1user1_04;
+
+create function gbt_int4_consistent(internal, integer, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_consistent(internal, integer, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_int4_distance(internal, integer, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_distance(internal, integer, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_int4_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_compress(internal) owner to m1user1_04;
+
+create function gbt_int4_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_fetch(internal) owner to m1user1_04;
+
+create function gbt_int4_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_int4_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_int4_union(internal, internal) returns gbtreekey8
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_union(internal, internal) owner to m1user1_04;
+
+create function gbt_int4_same(gbtreekey8, gbtreekey8, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int4_same(gbtreekey8, gbtreekey8, internal) owner to m1user1_04;
+
+create function gbt_int8_consistent(internal, bigint, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_consistent(internal, bigint, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_int8_distance(internal, bigint, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_distance(internal, bigint, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_int8_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_compress(internal) owner to m1user1_04;
+
+create function gbt_int8_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_fetch(internal) owner to m1user1_04;
+
+create function gbt_int8_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_int8_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_int8_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_union(internal, internal) owner to m1user1_04;
+
+create function gbt_int8_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_int8_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_float4_consistent(internal, real, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_consistent(internal, real, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_float4_distance(internal, real, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_distance(internal, real, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_float4_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_compress(internal) owner to m1user1_04;
+
+create function gbt_float4_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_fetch(internal) owner to m1user1_04;
+
+create function gbt_float4_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_float4_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_float4_union(internal, internal) returns gbtreekey8
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_union(internal, internal) owner to m1user1_04;
+
+create function gbt_float4_same(gbtreekey8, gbtreekey8, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float4_same(gbtreekey8, gbtreekey8, internal) owner to m1user1_04;
+
+create function gbt_float8_consistent(internal, double precision, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_consistent(internal, double precision, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_float8_distance(internal, double precision, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_distance(internal, double precision, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_float8_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_compress(internal) owner to m1user1_04;
+
+create function gbt_float8_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_fetch(internal) owner to m1user1_04;
+
+create function gbt_float8_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_float8_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_float8_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_union(internal, internal) owner to m1user1_04;
+
+create function gbt_float8_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_float8_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_ts_consistent(internal, timestamp, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_consistent(internal, timestamp, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_ts_distance(internal, timestamp, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_distance(internal, timestamp, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_tstz_consistent(internal, timestamp with time zone, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_tstz_consistent(internal, timestamp with time zone, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_tstz_distance(internal, timestamp with time zone, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_tstz_distance(internal, timestamp with time zone, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_ts_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_compress(internal) owner to m1user1_04;
+
+create function gbt_tstz_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_tstz_compress(internal) owner to m1user1_04;
+
+create function gbt_ts_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_fetch(internal) owner to m1user1_04;
+
+create function gbt_ts_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_ts_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_ts_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_union(internal, internal) owner to m1user1_04;
+
+create function gbt_ts_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_ts_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_time_consistent(internal, time, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_consistent(internal, time, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_time_distance(internal, time, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_distance(internal, time, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_timetz_consistent(internal, time with time zone, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_timetz_consistent(internal, time with time zone, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_time_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_compress(internal) owner to m1user1_04;
+
+create function gbt_timetz_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_timetz_compress(internal) owner to m1user1_04;
+
+create function gbt_time_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_fetch(internal) owner to m1user1_04;
+
+create function gbt_time_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_time_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_time_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_union(internal, internal) owner to m1user1_04;
+
+create function gbt_time_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_time_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_date_consistent(internal, date, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_consistent(internal, date, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_date_distance(internal, date, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_distance(internal, date, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_date_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_compress(internal) owner to m1user1_04;
+
+create function gbt_date_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_fetch(internal) owner to m1user1_04;
+
+create function gbt_date_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_date_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_date_union(internal, internal) returns gbtreekey8
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_union(internal, internal) owner to m1user1_04;
+
+create function gbt_date_same(gbtreekey8, gbtreekey8, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_date_same(gbtreekey8, gbtreekey8, internal) owner to m1user1_04;
+
+create function gbt_intv_consistent(internal, interval, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_consistent(internal, interval, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_intv_distance(internal, interval, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_distance(internal, interval, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_intv_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_compress(internal) owner to m1user1_04;
+
+create function gbt_intv_decompress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_decompress(internal) owner to m1user1_04;
+
+create function gbt_intv_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_fetch(internal) owner to m1user1_04;
+
+create function gbt_intv_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_intv_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_intv_union(internal, internal) returns gbtreekey32
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_union(internal, internal) owner to m1user1_04;
+
+create function gbt_intv_same(gbtreekey32, gbtreekey32, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_intv_same(gbtreekey32, gbtreekey32, internal) owner to m1user1_04;
+
+create function gbt_cash_consistent(internal, money, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_consistent(internal, money, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_cash_distance(internal, money, smallint, oid, internal) returns double precision
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_distance(internal, money, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_cash_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_compress(internal) owner to m1user1_04;
+
+create function gbt_cash_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_fetch(internal) owner to m1user1_04;
+
+create function gbt_cash_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_cash_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_cash_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_union(internal, internal) owner to m1user1_04;
+
+create function gbt_cash_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_cash_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_macad_consistent(internal, macaddr, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad_consistent(internal, macaddr, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_macad_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad_compress(internal) owner to m1user1_04;
+
+create function gbt_macad_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad_fetch(internal) owner to m1user1_04;
+
+create function gbt_macad_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_macad_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_macad_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad_union(internal, internal) owner to m1user1_04;
+
+create function gbt_macad_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_text_consistent(internal, text, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_text_consistent(internal, text, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_bpchar_consistent(internal, char, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bpchar_consistent(internal, char, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_text_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_text_compress(internal) owner to m1user1_04;
+
+create function gbt_bpchar_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bpchar_compress(internal) owner to m1user1_04;
+
+create function gbt_text_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_text_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_text_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_text_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_text_union(internal, internal) returns gbtreekey_var
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_text_union(internal, internal) owner to m1user1_04;
+
+create function gbt_text_same(gbtreekey_var, gbtreekey_var, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_text_same(gbtreekey_var, gbtreekey_var, internal) owner to m1user1_04;
+
+create function gbt_bytea_consistent(internal, bytea, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bytea_consistent(internal, bytea, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_bytea_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bytea_compress(internal) owner to m1user1_04;
+
+create function gbt_bytea_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bytea_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_bytea_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bytea_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_bytea_union(internal, internal) returns gbtreekey_var
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bytea_union(internal, internal) owner to m1user1_04;
+
+create function gbt_bytea_same(gbtreekey_var, gbtreekey_var, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bytea_same(gbtreekey_var, gbtreekey_var, internal) owner to m1user1_04;
+
+create function gbt_numeric_consistent(internal, numeric, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_numeric_consistent(internal, numeric, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_numeric_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_numeric_compress(internal) owner to m1user1_04;
+
+create function gbt_numeric_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_numeric_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_numeric_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_numeric_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_numeric_union(internal, internal) returns gbtreekey_var
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_numeric_union(internal, internal) owner to m1user1_04;
+
+create function gbt_numeric_same(gbtreekey_var, gbtreekey_var, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_numeric_same(gbtreekey_var, gbtreekey_var, internal) owner to m1user1_04;
+
+create function gbt_bit_consistent(internal, bit, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bit_consistent(internal, bit, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_bit_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bit_compress(internal) owner to m1user1_04;
+
+create function gbt_bit_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bit_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_bit_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bit_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_bit_union(internal, internal) returns gbtreekey_var
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bit_union(internal, internal) owner to m1user1_04;
+
+create function gbt_bit_same(gbtreekey_var, gbtreekey_var, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bit_same(gbtreekey_var, gbtreekey_var, internal) owner to m1user1_04;
+
+create function gbt_inet_consistent(internal, inet, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_inet_consistent(internal, inet, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_inet_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_inet_compress(internal) owner to m1user1_04;
+
+create function gbt_inet_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_inet_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_inet_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_inet_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_inet_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_inet_union(internal, internal) owner to m1user1_04;
+
+create function gbt_inet_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_inet_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_uuid_consistent(internal, uuid, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_uuid_consistent(internal, uuid, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_uuid_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_uuid_fetch(internal) owner to m1user1_04;
+
+create function gbt_uuid_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_uuid_compress(internal) owner to m1user1_04;
+
+create function gbt_uuid_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_uuid_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_uuid_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_uuid_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_uuid_union(internal, internal) returns gbtreekey32
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_uuid_union(internal, internal) owner to m1user1_04;
+
+create function gbt_uuid_same(gbtreekey32, gbtreekey32, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_uuid_same(gbtreekey32, gbtreekey32, internal) owner to m1user1_04;
+
+create function gbt_macad8_consistent(internal, macaddr8, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad8_consistent(internal, macaddr8, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_macad8_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad8_compress(internal) owner to m1user1_04;
+
+create function gbt_macad8_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad8_fetch(internal) owner to m1user1_04;
+
+create function gbt_macad8_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad8_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_macad8_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad8_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_macad8_union(internal, internal) returns gbtreekey16
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad8_union(internal, internal) owner to m1user1_04;
+
+create function gbt_macad8_same(gbtreekey16, gbtreekey16, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_macad8_same(gbtreekey16, gbtreekey16, internal) owner to m1user1_04;
+
+create function gbt_enum_consistent(internal, anyenum, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_enum_consistent(internal, anyenum, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_enum_compress(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_enum_compress(internal) owner to m1user1_04;
+
+create function gbt_enum_fetch(internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_enum_fetch(internal) owner to m1user1_04;
+
+create function gbt_enum_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_enum_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_enum_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_enum_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_enum_union(internal, internal) returns gbtreekey8
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_enum_union(internal, internal) owner to m1user1_04;
+
+create function gbt_enum_same(gbtreekey8, gbtreekey8, internal) returns internal
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_enum_same(gbtreekey8, gbtreekey8, internal) owner to m1user1_04;
+
+create function gbtreekey2_in(cstring) returns gbtreekey2
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey2_in(cstring) owner to m1user1_04;
+
+create function gbtreekey2_out(gbtreekey2) returns cstring
+    immutable
+    strict
+    parallel safe
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbtreekey2_out(gbtreekey2) owner to m1user1_04;
+
+create function gbt_bool_consistent(internal, boolean, smallint, oid, internal) returns boolean
+    immutable
+    strict
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bool_consistent(internal, boolean, smallint, oid, internal) owner to m1user1_04;
+
+create function gbt_bool_compress(internal) returns internal
+    immutable
+    strict
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bool_compress(internal) owner to m1user1_04;
+
+create function gbt_bool_fetch(internal) returns internal
+    immutable
+    strict
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bool_fetch(internal) owner to m1user1_04;
+
+create function gbt_bool_penalty(internal, internal, internal) returns internal
+    immutable
+    strict
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bool_penalty(internal, internal, internal) owner to m1user1_04;
+
+create function gbt_bool_picksplit(internal, internal) returns internal
+    immutable
+    strict
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bool_picksplit(internal, internal) owner to m1user1_04;
+
+create function gbt_bool_union(internal, internal) returns gbtreekey2
+    immutable
+    strict
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bool_union(internal, internal) owner to m1user1_04;
+
+create function gbt_bool_same(gbtreekey2, gbtreekey2, internal) returns internal
+    immutable
+    strict
+    language c
+as
+$$
+begin
+-- missing source code
+end;
+$$;
+
+alter function gbt_bool_same(gbtreekey2, gbtreekey2, internal) owner to m1user1_04;
+
+create function trg_action_declarer_conge_secretaire_ins() returns trigger
     language plpgsql
 as
 $$
 DECLARE
-    v_notification_id INTEGER;
+    v_role role_enum;
 BEGIN
-    INSERT INTO "Notification" (
-        destinataire_id, type, titre, message, lien, entite_type, entite_id
-    ) VALUES (
-                 p_destinataire_id, p_type, p_titre, p_message, p_lien, p_entite_type, p_entite_id
-             ) RETURNING notification_id INTO v_notification_id;
+    IF NEW.date_fin < NEW.date_debut THEN
+        RAISE EXCEPTION 'date_fin doit être >= date_debut';
+    END IF;
 
-    RETURN v_notification_id;
+    -- si remplaçant fourni, doit être ENSEIGNANT (ou ADMIN si vous voulez)
+    IF NEW.remplacant_utilisateur_id IS NOT NULL THEN
+        SELECT u.role INTO v_role
+        FROM "Utilisateur" u
+        WHERE u.id = NEW.remplacant_utilisateur_id;
+
+        IF v_role IS NULL THEN
+            RAISE EXCEPTION 'Remplaçant introuvable';
+        END IF;
+
+        IF v_role <> 'ENSEIGNANT' AND v_role <> 'ADMIN' THEN
+            RAISE EXCEPTION 'Le remplaçant doit être ENSEIGNANT (ou ADMIN)';
+        END IF;
+    END IF;
+
+    INSERT INTO "CongeSecretaire"(secretaire_id, date_debut, date_fin, remplacant_utilisateur_id, motif)
+    VALUES (NEW.secretaire_id, NEW.date_debut, NEW.date_fin, NEW.remplacant_utilisateur_id, NEW.motif)
+    RETURNING conge_id INTO NEW.conge_id;
+
+    RETURN NEW;
 END;
 $$;
 
-comment on function fn_creer_notification(integer, notification_type_t, varchar, text, varchar, varchar, integer) is 'Fonction utilitaire pour créer une notification';
+alter function trg_action_declarer_conge_secretaire_ins() owner to m1user1_04;
 
-alter function fn_creer_notification(integer, notification_type_t, varchar, text, varchar, varchar, integer) owner to m1user1_03;
+create trigger trg_action_declarer_conge_secretaire_ins
+    instead of insert
+    on v_action_declarer_conge_secretaire
+    for each row
+execute procedure trg_action_declarer_conge_secretaire_ins();
 
 create function trg_notify_offre_soumise() returns trigger
     language plpgsql
@@ -1538,18 +4351,16 @@ DECLARE
     v_enseignant_user_id INTEGER;
     v_entreprise_nom VARCHAR(255);
 BEGIN
-    -- Récupérer le nom de l'entreprise
     SELECT e.raison_sociale INTO v_entreprise_nom
     FROM "Entreprise" e
     WHERE e.entreprise_id = NEW.entreprise_id;
 
-    -- Notifier tous les enseignants
     FOR v_enseignant_user_id IN
         SELECT u.id FROM "Utilisateur" u WHERE u.role = 'ENSEIGNANT'
         LOOP
             PERFORM fn_creer_notification(
                     v_enseignant_user_id,
-                    'OFFRE_SOUMISE'::notification_type_t,
+                    'OFFRE_SOUMISE'::notification_type_enum,
                     'Nouvelle offre à valider',
                     format('L''entreprise %s a soumis l''offre "%s"',
                            COALESCE(v_entreprise_nom, 'Inconnue'),
@@ -1559,7 +4370,6 @@ BEGIN
                     NEW.id
                     );
         END LOOP;
-
     RETURN NEW;
 END;
 $$;
@@ -1579,28 +4389,25 @@ as
 $$
 DECLARE
     v_entreprise_user_id INTEGER;
-    v_type notification_type_t;
+    v_type notification_type_enum;
     v_titre VARCHAR(100);
     v_message TEXT;
 BEGIN
-    -- Ne déclencher que si le statut change réellement
     IF OLD.statut_validation IS NOT DISTINCT FROM NEW.statut_validation THEN
         RETURN NEW;
     END IF;
 
-    -- Récupérer l'utilisateur de l'entreprise
     SELECT e.utilisateur_id INTO v_entreprise_user_id
     FROM "Entreprise" e
     WHERE e.entreprise_id = NEW.entreprise_id;
 
-    -- Si pas d'utilisateur trouvé, sortir
     IF v_entreprise_user_id IS NULL THEN
         RETURN NEW;
     END IF;
 
     IF NEW.statut_validation = 'VALIDE' THEN
         v_type := 'OFFRE_VALIDEE';
-        v_titre := 'Offre validée ✓';
+        v_titre := 'Offre validée';
         v_message := format('Votre offre "%s" a été validée et est maintenant visible par les étudiants.',
                             COALESCE(NEW.titre, 'Sans titre'));
     ELSIF NEW.statut_validation = 'REFUSE' THEN
@@ -1609,7 +4416,6 @@ BEGIN
         v_message := format('Votre offre "%s" a été refusée. Consultez les détails pour connaître le motif.',
                             COALESCE(NEW.titre, 'Sans titre'));
     ELSE
-        -- Autre statut, pas de notification
         RETURN NEW;
     END IF;
 
@@ -1622,7 +4428,6 @@ BEGIN
             'offre',
             NEW.id
             );
-
     RETURN NEW;
 END;
 $$;
@@ -1645,27 +4450,23 @@ DECLARE
     v_etudiant_nom VARCHAR(255);
     v_offre_titre VARCHAR(255);
 BEGIN
-    -- Récupérer le nom de l'étudiant
     SELECT CONCAT(e.prenom, ' ', e.nom) INTO v_etudiant_nom
     FROM "Etudiant" e
     WHERE e.etudiant_id = NEW.etudiant_id;
 
-    -- Récupérer le titre de l'offre et l'utilisateur de l'entreprise
     SELECT o.titre, ent.utilisateur_id
     INTO v_offre_titre, v_entreprise_user_id
     FROM "Offre" o
              JOIN "Entreprise" ent ON ent.entreprise_id = o.entreprise_id
     WHERE o.id = NEW.offre_id;
 
-    -- Si pas d'utilisateur trouvé, sortir
     IF v_entreprise_user_id IS NULL THEN
         RETURN NEW;
     END IF;
 
-    -- Notifier l'entreprise
     PERFORM fn_creer_notification(
             v_entreprise_user_id,
-            'CANDIDATURE_RECUE'::notification_type_t,
+            'CANDIDATURE_RECUE'::notification_type_enum,
             'Nouvelle candidature reçue',
             format('%s a candidaté à votre offre "%s"',
                    COALESCE(v_etudiant_nom, 'Un étudiant'),
@@ -1674,7 +4475,6 @@ BEGIN
             'candidature',
             NEW.id
             );
-
     RETURN NEW;
 END;
 $$;
@@ -1695,28 +4495,24 @@ DECLARE
     v_etudiant_user_id INTEGER;
     v_offre_titre VARCHAR(255);
     v_entreprise_nom VARCHAR(255);
-    v_type notification_type_t;
+    v_type notification_type_enum;
     v_titre VARCHAR(100);
     v_message TEXT;
 BEGIN
-    -- Ne déclencher que si le statut change réellement
     IF OLD.statut IS NOT DISTINCT FROM NEW.statut THEN
         RETURN NEW;
     END IF;
 
-    -- Récupérer l'utilisateur de l'étudiant
     SELECT e.utilisateur_id INTO v_etudiant_user_id
     FROM "Etudiant" e
     WHERE e.etudiant_id = NEW.etudiant_id;
 
-    -- Récupérer les infos de l'offre et de l'entreprise
     SELECT o.titre, ent.raison_sociale
     INTO v_offre_titre, v_entreprise_nom
     FROM "Offre" o
              JOIN "Entreprise" ent ON ent.entreprise_id = o.entreprise_id
     WHERE o.id = NEW.offre_id;
 
-    -- Si pas d'utilisateur trouvé, sortir
     IF v_etudiant_user_id IS NULL THEN
         RETURN NEW;
     END IF;
@@ -1740,7 +4536,6 @@ BEGIN
                             COALESCE(v_offre_titre, 'l''offre'),
                             COALESCE(v_entreprise_nom, 'l''entreprise'));
     ELSE
-        -- Autre statut (ANNULE, EN_ATTENTE), pas de notification standard
         RETURN NEW;
     END IF;
 
@@ -1753,7 +4548,6 @@ BEGIN
             'candidature',
             NEW.id
             );
-
     RETURN NEW;
 END;
 $$;
@@ -1773,35 +4567,31 @@ as
 $$
 DECLARE
     v_etudiant_user_id INTEGER;
-    v_type notification_type_t;
+    v_type notification_type_enum;
     v_titre VARCHAR(100);
     v_message TEXT;
 BEGIN
-    -- Ne déclencher que si le statut change réellement
     IF OLD.statut IS NOT DISTINCT FROM NEW.statut THEN
         RETURN NEW;
     END IF;
 
-    -- Récupérer l'utilisateur de l'étudiant
     SELECT e.utilisateur_id INTO v_etudiant_user_id
     FROM "Etudiant" e
     WHERE e.etudiant_id = NEW.etudiant_id;
 
-    -- Si pas d'utilisateur trouvé, sortir
     IF v_etudiant_user_id IS NULL THEN
         RETURN NEW;
     END IF;
 
     IF NEW.statut = 'VALIDE' THEN
         v_type := 'RC_VALIDEE';
-        v_titre := 'Attestation RC validée ✓';
+        v_titre := 'Attestation RC validée';
         v_message := 'Votre attestation de responsabilité civile a été validée. Vous pouvez maintenant candidater aux offres.';
     ELSIF NEW.statut = 'REFUSE' THEN
         v_type := 'RC_REFUSEE';
         v_titre := 'Attestation RC refusée';
         v_message := 'Votre attestation de responsabilité civile a été refusée. Veuillez en déposer une nouvelle conforme.';
     ELSE
-        -- Autre statut, pas de notification
         RETURN NEW;
     END IF;
 
@@ -1814,7 +4604,6 @@ BEGIN
             'attestation',
             NEW.etudiant_id
             );
-
     RETURN NEW;
 END;
 $$;
@@ -1827,4 +4616,871 @@ create trigger trg_attestation_rc_notification
     on "AttestationRC"
     for each row
 execute procedure trg_notify_attestation_rc();
+
+create function fn_creer_notification(p_destinataire_id integer, p_type notification_type_enum, p_titre character varying, p_message text, p_lien character varying DEFAULT NULL::character varying, p_entite_type character varying DEFAULT NULL::character varying, p_entite_id integer DEFAULT NULL::integer) returns integer
+    language plpgsql
+as
+$$
+DECLARE
+    v_notification_id INTEGER;
+BEGIN
+    INSERT INTO "Notification" (
+        destinataire_id, type, titre, message, lien, entite_type, entite_id
+    ) VALUES (
+                 p_destinataire_id, p_type, p_titre, p_message, p_lien, p_entite_type, p_entite_id
+             ) RETURNING notification_id INTO v_notification_id;
+
+    RETURN v_notification_id;
+END;
+$$;
+
+alter function fn_creer_notification(integer, notification_type_enum, varchar, text, varchar, varchar, integer) owner to m1user1_03;
+
+create function notify_rc_expirations_proches(jours_avant integer DEFAULT 30)
+    returns TABLE(etudiant_id integer, notification_id integer)
+    language plpgsql
+as
+$$
+DECLARE
+    v_row RECORD;
+    v_notif_id integer;
+BEGIN
+    -- Parcourir toutes les attestations RC validées qui expirent dans les X prochains jours
+    -- et qui n'ont pas encore reçu de notification d'expiration récente (dans les 7 derniers jours)
+    FOR v_row IN
+        SELECT
+            e.etudiant_id,
+            e.utilisateur_id,
+            a.date_expiration,
+            (a.date_expiration - CURRENT_DATE) AS jours_restants
+        FROM "AttestationRC" a
+                 JOIN "Etudiant" e ON e.etudiant_id = a.etudiant_id
+        WHERE a.statut = 'VALIDE'
+          AND a.date_expiration > CURRENT_DATE
+          AND a.date_expiration <= CURRENT_DATE + jours_avant
+          AND NOT EXISTS (
+            SELECT 1 FROM "Notification" n
+            WHERE n.destinataire_id = e.utilisateur_id
+              AND n.type = 'RC_EXPIRATION_PROCHE'
+              AND n.created_at > CURRENT_DATE - INTERVAL '7 days'
+        )
+        LOOP
+            -- Créer la notification
+            INSERT INTO "Notification" (destinataire_id, type, titre, message, lien, entite_type, entite_id)
+            VALUES (
+                       v_row.utilisateur_id,
+                       'RC_EXPIRATION_PROCHE',
+                       'Attestation RC bientôt expirée',
+                       'Votre attestation de Responsabilité Civile expire dans ' || v_row.jours_restants || ' jour(s). Pensez à la renouveler.',
+                       '/attestation-rc',
+                       'attestation_rc',
+                       v_row.etudiant_id
+                   )
+            RETURNING id INTO v_notif_id;
+
+            etudiant_id := v_row.etudiant_id;
+            notification_id := v_notif_id;
+            RETURN NEXT;
+        END LOOP;
+END;
+$$;
+
+alter function notify_rc_expirations_proches(integer) owner to m1user1_03;
+
+create operator <-> (procedure = cash_dist, leftarg = money, rightarg = money, commutator = <->);
+
+alter operator <->(money, money) owner to m1user1_04;
+
+create operator <-> (procedure = date_dist, leftarg = date, rightarg = date, commutator = <->);
+
+alter operator <->(date, date) owner to m1user1_04;
+
+create operator <-> (procedure = float4_dist, leftarg = real, rightarg = real, commutator = <->);
+
+alter operator <->(real, real) owner to m1user1_04;
+
+create operator <-> (procedure = float8_dist, leftarg = double precision, rightarg = double precision, commutator = <->);
+
+alter operator <->(double precision, double precision) owner to m1user1_04;
+
+create operator <-> (procedure = int2_dist, leftarg = smallint, rightarg = smallint, commutator = <->);
+
+alter operator <->(smallint, smallint) owner to m1user1_04;
+
+create operator <-> (procedure = int4_dist, leftarg = integer, rightarg = integer, commutator = <->);
+
+alter operator <->(integer, integer) owner to m1user1_04;
+
+create operator <-> (procedure = int8_dist, leftarg = bigint, rightarg = bigint, commutator = <->);
+
+alter operator <->(bigint, bigint) owner to m1user1_04;
+
+create operator <-> (procedure = interval_dist, leftarg = interval, rightarg = interval, commutator = <->);
+
+alter operator <->(interval, interval) owner to m1user1_04;
+
+create operator <-> (procedure = oid_dist, leftarg = oid, rightarg = oid, commutator = <->);
+
+alter operator <->(oid, oid) owner to m1user1_04;
+
+create operator <-> (procedure = time_dist, leftarg = time, rightarg = time, commutator = <->);
+
+alter operator <->(time, time) owner to m1user1_04;
+
+create operator <-> (procedure = ts_dist, leftarg = timestamp, rightarg = timestamp, commutator = <->);
+
+alter operator <->(timestamp, timestamp) owner to m1user1_04;
+
+create operator <-> (procedure = tstz_dist, leftarg = timestamp with time zone, rightarg = timestamp with time zone, commutator = <->);
+
+alter operator <->(timestamp with time zone, timestamp with time zone) owner to m1user1_04;
+
+create operator family gist_oid_ops using gist;
+
+alter operator family gist_oid_ops using gist add
+    operator 1 <(oid,oid),
+    operator 2 <=(oid,oid),
+    operator 3 =(oid,oid),
+    operator 4 >=(oid,oid),
+    operator 5 >(oid,oid),
+    operator 6 <>(oid,oid),
+    operator 15 <->(oid, oid) for order by oid_ops,
+    function 4(oid, oid) gbt_decompress(internal),
+    function 5(oid, oid) gbt_oid_penalty(internal, internal, internal),
+    function 1(oid, oid) gbt_oid_consistent(internal, oid, smallint, oid, internal),
+    function 6(oid, oid) gbt_oid_picksplit(internal, internal),
+    function 7(oid, oid) gbt_oid_same(gbtreekey8, gbtreekey8, internal),
+    function 9(oid, oid) gbt_oid_fetch(internal),
+    function 8(oid, oid) gbt_oid_distance(internal, oid, smallint, oid, internal),
+    function 3(oid, oid) gbt_oid_compress(internal),
+    function 2(oid, oid) gbt_oid_union(internal, internal);
+
+alter operator family gist_oid_ops using gist owner to m1user1_04;
+
+create operator class gist_oid_ops default for type oid using gist as storage gbtreekey8 function 7(oid, oid) gbt_oid_same(gbtreekey8, gbtreekey8, internal),
+	function 1(oid, oid) gbt_oid_consistent(internal, oid, smallint, oid, internal),
+	function 5(oid, oid) gbt_oid_penalty(internal, internal, internal),
+	function 6(oid, oid) gbt_oid_picksplit(internal, internal),
+	function 2(oid, oid) gbt_oid_union(internal, internal);
+
+alter operator class gist_oid_ops using gist owner to m1user1_04;
+
+create operator family gist_int2_ops using gist;
+
+alter operator family gist_int2_ops using gist add
+    operator 1 <(smallint,smallint),
+    operator 2 <=(smallint,smallint),
+    operator 3 =(smallint,smallint),
+    operator 4 >=(smallint,smallint),
+    operator 5 >(smallint,smallint),
+    operator 6 <>(smallint,smallint),
+    operator 15 <->(smallint, smallint) for order by integer_ops,
+    function 9(smallint, smallint) gbt_int2_fetch(internal),
+    function 3(smallint, smallint) gbt_int2_compress(internal),
+    function 2(smallint, smallint) gbt_int2_union(internal, internal),
+    function 1(smallint, smallint) gbt_int2_consistent(internal, smallint, smallint, oid, internal),
+    function 5(smallint, smallint) gbt_int2_penalty(internal, internal, internal),
+    function 6(smallint, smallint) gbt_int2_picksplit(internal, internal),
+    function 4(smallint, smallint) gbt_decompress(internal),
+    function 7(smallint, smallint) gbt_int2_same(gbtreekey4, gbtreekey4, internal),
+    function 8(smallint, smallint) gbt_int2_distance(internal, smallint, smallint, oid, internal);
+
+alter operator family gist_int2_ops using gist owner to m1user1_04;
+
+create operator class gist_int2_ops default for type smallint using gist as storage gbtreekey4 function 2(smallint, smallint) gbt_int2_union(internal, internal),
+	function 1(smallint, smallint) gbt_int2_consistent(internal, smallint, smallint, oid, internal),
+	function 6(smallint, smallint) gbt_int2_picksplit(internal, internal),
+	function 7(smallint, smallint) gbt_int2_same(gbtreekey4, gbtreekey4, internal),
+	function 5(smallint, smallint) gbt_int2_penalty(internal, internal, internal);
+
+alter operator class gist_int2_ops using gist owner to m1user1_04;
+
+create operator family gist_int4_ops using gist;
+
+alter operator family gist_int4_ops using gist add
+    operator 1 <(integer,integer),
+    operator 2 <=(integer,integer),
+    operator 3 =(integer,integer),
+    operator 4 >=(integer,integer),
+    operator 5 >(integer,integer),
+    operator 6 <>(integer,integer),
+    operator 15 <->(integer, integer) for order by integer_ops,
+    function 7(integer, integer) gbt_int4_same(gbtreekey8, gbtreekey8, internal),
+    function 1(integer, integer) gbt_int4_consistent(internal, integer, smallint, oid, internal),
+    function 9(integer, integer) gbt_int4_fetch(internal),
+    function 2(integer, integer) gbt_int4_union(internal, internal),
+    function 8(integer, integer) gbt_int4_distance(internal, integer, smallint, oid, internal),
+    function 3(integer, integer) gbt_int4_compress(internal),
+    function 4(integer, integer) gbt_decompress(internal),
+    function 5(integer, integer) gbt_int4_penalty(internal, internal, internal),
+    function 6(integer, integer) gbt_int4_picksplit(internal, internal);
+
+alter operator family gist_int4_ops using gist owner to m1user1_04;
+
+create operator class gist_int4_ops default for type integer using gist as storage gbtreekey8 function 6(integer, integer) gbt_int4_picksplit(internal, internal),
+	function 7(integer, integer) gbt_int4_same(gbtreekey8, gbtreekey8, internal),
+	function 2(integer, integer) gbt_int4_union(internal, internal),
+	function 5(integer, integer) gbt_int4_penalty(internal, internal, internal),
+	function 1(integer, integer) gbt_int4_consistent(internal, integer, smallint, oid, internal);
+
+alter operator class gist_int4_ops using gist owner to m1user1_04;
+
+create operator family gist_int8_ops using gist;
+
+alter operator family gist_int8_ops using gist add
+    operator 1 <(bigint,bigint),
+    operator 2 <=(bigint,bigint),
+    operator 3 =(bigint,bigint),
+    operator 4 >=(bigint,bigint),
+    operator 5 >(bigint,bigint),
+    operator 6 <>(bigint,bigint),
+    operator 15 <->(bigint, bigint) for order by integer_ops,
+    function 1(bigint, bigint) gbt_int8_consistent(internal, bigint, smallint, oid, internal),
+    function 2(bigint, bigint) gbt_int8_union(internal, internal),
+    function 3(bigint, bigint) gbt_int8_compress(internal),
+    function 4(bigint, bigint) gbt_decompress(internal),
+    function 5(bigint, bigint) gbt_int8_penalty(internal, internal, internal),
+    function 6(bigint, bigint) gbt_int8_picksplit(internal, internal),
+    function 7(bigint, bigint) gbt_int8_same(gbtreekey16, gbtreekey16, internal),
+    function 8(bigint, bigint) gbt_int8_distance(internal, bigint, smallint, oid, internal),
+    function 9(bigint, bigint) gbt_int8_fetch(internal);
+
+alter operator family gist_int8_ops using gist owner to m1user1_04;
+
+create operator class gist_int8_ops default for type bigint using gist as storage gbtreekey16 function 5(bigint, bigint) gbt_int8_penalty(internal, internal, internal),
+	function 1(bigint, bigint) gbt_int8_consistent(internal, bigint, smallint, oid, internal),
+	function 7(bigint, bigint) gbt_int8_same(gbtreekey16, gbtreekey16, internal),
+	function 6(bigint, bigint) gbt_int8_picksplit(internal, internal),
+	function 2(bigint, bigint) gbt_int8_union(internal, internal);
+
+alter operator class gist_int8_ops using gist owner to m1user1_04;
+
+create operator family gist_float4_ops using gist;
+
+alter operator family gist_float4_ops using gist add
+    operator 1 <(real,real),
+    operator 2 <=(real,real),
+    operator 3 =(real,real),
+    operator 4 >=(real,real),
+    operator 5 >(real,real),
+    operator 6 <>(real,real),
+    operator 15 <->(real, real) for order by float_ops,
+    function 9(real, real) gbt_float4_fetch(internal),
+    function 2(real, real) gbt_float4_union(internal, internal),
+    function 6(real, real) gbt_float4_picksplit(internal, internal),
+    function 3(real, real) gbt_float4_compress(internal),
+    function 8(real, real) gbt_float4_distance(internal, real, smallint, oid, internal),
+    function 7(real, real) gbt_float4_same(gbtreekey8, gbtreekey8, internal),
+    function 4(real, real) gbt_decompress(internal),
+    function 1(real, real) gbt_float4_consistent(internal, real, smallint, oid, internal),
+    function 5(real, real) gbt_float4_penalty(internal, internal, internal);
+
+alter operator family gist_float4_ops using gist owner to m1user1_04;
+
+create operator class gist_float4_ops default for type real using gist as storage gbtreekey8 function 7(real, real) gbt_float4_same(gbtreekey8, gbtreekey8, internal),
+	function 6(real, real) gbt_float4_picksplit(internal, internal),
+	function 5(real, real) gbt_float4_penalty(internal, internal, internal),
+	function 1(real, real) gbt_float4_consistent(internal, real, smallint, oid, internal),
+	function 2(real, real) gbt_float4_union(internal, internal);
+
+alter operator class gist_float4_ops using gist owner to m1user1_04;
+
+create operator family gist_float8_ops using gist;
+
+alter operator family gist_float8_ops using gist add
+    operator 1 <(double precision,double precision),
+    operator 2 <=(double precision,double precision),
+    operator 3 =(double precision,double precision),
+    operator 4 >=(double precision,double precision),
+    operator 5 >(double precision,double precision),
+    operator 6 <>(double precision,double precision),
+    operator 15 <->(double precision, double precision) for order by float_ops,
+    function 4(double precision, double precision) gbt_decompress(internal),
+    function 3(double precision, double precision) gbt_float8_compress(internal),
+    function 2(double precision, double precision) gbt_float8_union(internal, internal),
+    function 1(double precision, double precision) gbt_float8_consistent(internal, double precision, smallint, oid, internal),
+    function 9(double precision, double precision) gbt_float8_fetch(internal),
+    function 8(double precision, double precision) gbt_float8_distance(internal, double precision, smallint, oid, internal),
+    function 7(double precision, double precision) gbt_float8_same(gbtreekey16, gbtreekey16, internal),
+    function 6(double precision, double precision) gbt_float8_picksplit(internal, internal),
+    function 5(double precision, double precision) gbt_float8_penalty(internal, internal, internal);
+
+alter operator family gist_float8_ops using gist owner to m1user1_04;
+
+create operator class gist_float8_ops default for type double precision using gist as storage gbtreekey16 function 1(double precision, double precision) gbt_float8_consistent(internal, double precision, smallint, oid, internal),
+	function 7(double precision, double precision) gbt_float8_same(gbtreekey16, gbtreekey16, internal),
+	function 5(double precision, double precision) gbt_float8_penalty(internal, internal, internal),
+	function 6(double precision, double precision) gbt_float8_picksplit(internal, internal),
+	function 2(double precision, double precision) gbt_float8_union(internal, internal);
+
+alter operator class gist_float8_ops using gist owner to m1user1_04;
+
+create operator family gist_timestamp_ops using gist;
+
+alter operator family gist_timestamp_ops using gist add
+    operator 1 <(timestamp without time zone,timestamp without time zone),
+    operator 2 <=(timestamp without time zone,timestamp without time zone),
+    operator 3 =(timestamp without time zone,timestamp without time zone),
+    operator 4 >=(timestamp without time zone,timestamp without time zone),
+    operator 5 >(timestamp without time zone,timestamp without time zone),
+    operator 6 <>(timestamp without time zone,timestamp without time zone),
+    operator 15 <->(timestamp, timestamp) for order by interval_ops,
+    function 8(timestamp without time zone, timestamp without time zone) gbt_ts_distance(internal, timestamp, smallint, oid, internal),
+    function 2(timestamp without time zone, timestamp without time zone) gbt_ts_union(internal, internal),
+    function 3(timestamp without time zone, timestamp without time zone) gbt_ts_compress(internal),
+    function 4(timestamp without time zone, timestamp without time zone) gbt_decompress(internal),
+    function 5(timestamp without time zone, timestamp without time zone) gbt_ts_penalty(internal, internal, internal),
+    function 6(timestamp without time zone, timestamp without time zone) gbt_ts_picksplit(internal, internal),
+    function 7(timestamp without time zone, timestamp without time zone) gbt_ts_same(gbtreekey16, gbtreekey16, internal),
+    function 1(timestamp without time zone, timestamp without time zone) gbt_ts_consistent(internal, timestamp, smallint, oid, internal),
+    function 9(timestamp without time zone, timestamp without time zone) gbt_ts_fetch(internal);
+
+alter operator family gist_timestamp_ops using gist owner to m1user1_04;
+
+create operator class gist_timestamp_ops default for type timestamp without time zone using gist as storage gbtreekey16 function 5(timestamp without time zone, timestamp without time zone) gbt_ts_penalty(internal, internal, internal),
+	function 1(timestamp without time zone, timestamp without time zone) gbt_ts_consistent(internal, timestamp, smallint, oid, internal),
+	function 7(timestamp without time zone, timestamp without time zone) gbt_ts_same(gbtreekey16, gbtreekey16, internal),
+	function 6(timestamp without time zone, timestamp without time zone) gbt_ts_picksplit(internal, internal),
+	function 2(timestamp without time zone, timestamp without time zone) gbt_ts_union(internal, internal);
+
+alter operator class gist_timestamp_ops using gist owner to m1user1_04;
+
+create operator family gist_timestamptz_ops using gist;
+
+alter operator family gist_timestamptz_ops using gist add
+    operator 1 <(timestamp with time zone,timestamp with time zone),
+    operator 2 <=(timestamp with time zone,timestamp with time zone),
+    operator 3 =(timestamp with time zone,timestamp with time zone),
+    operator 4 >=(timestamp with time zone,timestamp with time zone),
+    operator 5 >(timestamp with time zone,timestamp with time zone),
+    operator 6 <>(timestamp with time zone,timestamp with time zone),
+    operator 15 <->(timestamp with time zone, timestamp with time zone) for order by interval_ops,
+    function 4(timestamp with time zone, timestamp with time zone) gbt_decompress(internal),
+    function 7(timestamp with time zone, timestamp with time zone) gbt_ts_same(gbtreekey16, gbtreekey16, internal),
+    function 3(timestamp with time zone, timestamp with time zone) gbt_tstz_compress(internal),
+    function 2(timestamp with time zone, timestamp with time zone) gbt_ts_union(internal, internal),
+    function 1(timestamp with time zone, timestamp with time zone) gbt_tstz_consistent(internal, timestamp with time zone, smallint, oid, internal),
+    function 8(timestamp with time zone, timestamp with time zone) gbt_tstz_distance(internal, timestamp with time zone, smallint, oid, internal),
+    function 9(timestamp with time zone, timestamp with time zone) gbt_ts_fetch(internal),
+    function 5(timestamp with time zone, timestamp with time zone) gbt_ts_penalty(internal, internal, internal),
+    function 6(timestamp with time zone, timestamp with time zone) gbt_ts_picksplit(internal, internal);
+
+alter operator family gist_timestamptz_ops using gist owner to m1user1_04;
+
+create operator class gist_timestamptz_ops default for type timestamp with time zone using gist as storage gbtreekey16 function 1(timestamp with time zone, timestamp with time zone) gbt_tstz_consistent(internal, timestamp with time zone, smallint, oid, internal),
+	function 7(timestamp with time zone, timestamp with time zone) gbt_ts_same(gbtreekey16, gbtreekey16, internal),
+	function 6(timestamp with time zone, timestamp with time zone) gbt_ts_picksplit(internal, internal),
+	function 5(timestamp with time zone, timestamp with time zone) gbt_ts_penalty(internal, internal, internal),
+	function 2(timestamp with time zone, timestamp with time zone) gbt_ts_union(internal, internal);
+
+alter operator class gist_timestamptz_ops using gist owner to m1user1_04;
+
+create operator family gist_time_ops using gist;
+
+alter operator family gist_time_ops using gist add
+    operator 1 <(time without time zone,time without time zone),
+    operator 2 <=(time without time zone,time without time zone),
+    operator 3 =(time without time zone,time without time zone),
+    operator 4 >=(time without time zone,time without time zone),
+    operator 5 >(time without time zone,time without time zone),
+    operator 6 <>(time without time zone,time without time zone),
+    operator 15 <->(time, time) for order by interval_ops,
+    function 2(time without time zone, time without time zone) gbt_time_union(internal, internal),
+    function 9(time without time zone, time without time zone) gbt_time_fetch(internal),
+    function 8(time without time zone, time without time zone) gbt_time_distance(internal, time, smallint, oid, internal),
+    function 7(time without time zone, time without time zone) gbt_time_same(gbtreekey16, gbtreekey16, internal),
+    function 6(time without time zone, time without time zone) gbt_time_picksplit(internal, internal),
+    function 5(time without time zone, time without time zone) gbt_time_penalty(internal, internal, internal),
+    function 4(time without time zone, time without time zone) gbt_decompress(internal),
+    function 3(time without time zone, time without time zone) gbt_time_compress(internal),
+    function 1(time without time zone, time without time zone) gbt_time_consistent(internal, time, smallint, oid, internal);
+
+alter operator family gist_time_ops using gist owner to m1user1_04;
+
+create operator class gist_time_ops default for type time without time zone using gist as storage gbtreekey16 function 1(time without time zone, time without time zone) gbt_time_consistent(internal, time, smallint, oid, internal),
+	function 6(time without time zone, time without time zone) gbt_time_picksplit(internal, internal),
+	function 7(time without time zone, time without time zone) gbt_time_same(gbtreekey16, gbtreekey16, internal),
+	function 2(time without time zone, time without time zone) gbt_time_union(internal, internal),
+	function 5(time without time zone, time without time zone) gbt_time_penalty(internal, internal, internal);
+
+alter operator class gist_time_ops using gist owner to m1user1_04;
+
+create operator family gist_timetz_ops using gist;
+
+alter operator family gist_timetz_ops using gist add
+    operator 1 <(time with time zone,time with time zone),
+    operator 2 <=(time with time zone,time with time zone),
+    operator 3 =(time with time zone,time with time zone),
+    operator 4 >=(time with time zone,time with time zone),
+    operator 5 >(time with time zone,time with time zone),
+    operator 6 <>(time with time zone,time with time zone),
+    function 1(time with time zone, time with time zone) gbt_timetz_consistent(internal, time with time zone, smallint, oid, internal),
+    function 3(time with time zone, time with time zone) gbt_timetz_compress(internal),
+    function 4(time with time zone, time with time zone) gbt_decompress(internal),
+    function 5(time with time zone, time with time zone) gbt_time_penalty(internal, internal, internal),
+    function 7(time with time zone, time with time zone) gbt_time_same(gbtreekey16, gbtreekey16, internal),
+    function 2(time with time zone, time with time zone) gbt_time_union(internal, internal),
+    function 6(time with time zone, time with time zone) gbt_time_picksplit(internal, internal);
+
+alter operator family gist_timetz_ops using gist owner to m1user1_04;
+
+create operator class gist_timetz_ops default for type time with time zone using gist as storage gbtreekey16 function 1(time with time zone, time with time zone) gbt_timetz_consistent(internal, time with time zone, smallint, oid, internal),
+	function 2(time with time zone, time with time zone) gbt_time_union(internal, internal),
+	function 5(time with time zone, time with time zone) gbt_time_penalty(internal, internal, internal),
+	function 6(time with time zone, time with time zone) gbt_time_picksplit(internal, internal),
+	function 7(time with time zone, time with time zone) gbt_time_same(gbtreekey16, gbtreekey16, internal);
+
+alter operator class gist_timetz_ops using gist owner to m1user1_04;
+
+create operator family gist_date_ops using gist;
+
+alter operator family gist_date_ops using gist add
+    operator 1 <(date,date),
+    operator 2 <=(date,date),
+    operator 3 =(date,date),
+    operator 4 >=(date,date),
+    operator 5 >(date,date),
+    operator 6 <>(date,date),
+    operator 15 <->(date, date) for order by integer_ops,
+    function 5(date, date) gbt_date_penalty(internal, internal, internal),
+    function 3(date, date) gbt_date_compress(internal),
+    function 6(date, date) gbt_date_picksplit(internal, internal),
+    function 7(date, date) gbt_date_same(gbtreekey8, gbtreekey8, internal),
+    function 2(date, date) gbt_date_union(internal, internal),
+    function 9(date, date) gbt_date_fetch(internal),
+    function 8(date, date) gbt_date_distance(internal, date, smallint, oid, internal),
+    function 4(date, date) gbt_decompress(internal),
+    function 1(date, date) gbt_date_consistent(internal, date, smallint, oid, internal);
+
+alter operator family gist_date_ops using gist owner to m1user1_04;
+
+create operator class gist_date_ops default for type date using gist as storage gbtreekey8 function 2(date, date) gbt_date_union(internal, internal),
+	function 5(date, date) gbt_date_penalty(internal, internal, internal),
+	function 6(date, date) gbt_date_picksplit(internal, internal),
+	function 7(date, date) gbt_date_same(gbtreekey8, gbtreekey8, internal),
+	function 1(date, date) gbt_date_consistent(internal, date, smallint, oid, internal);
+
+alter operator class gist_date_ops using gist owner to m1user1_04;
+
+create operator family gist_interval_ops using gist;
+
+alter operator family gist_interval_ops using gist add
+    operator 1 <(interval,interval),
+    operator 2 <=(interval,interval),
+    operator 3 =(interval,interval),
+    operator 4 >=(interval,interval),
+    operator 5 >(interval,interval),
+    operator 6 <>(interval,interval),
+    operator 15 <->(interval, interval) for order by interval_ops,
+    function 3(interval, interval) gbt_intv_compress(internal),
+    function 5(interval, interval) gbt_intv_penalty(internal, internal, internal),
+    function 6(interval, interval) gbt_intv_picksplit(internal, internal),
+    function 7(interval, interval) gbt_intv_same(gbtreekey32, gbtreekey32, internal),
+    function 2(interval, interval) gbt_intv_union(internal, internal),
+    function 8(interval, interval) gbt_intv_distance(internal, interval, smallint, oid, internal),
+    function 1(interval, interval) gbt_intv_consistent(internal, interval, smallint, oid, internal),
+    function 9(interval, interval) gbt_intv_fetch(internal),
+    function 4(interval, interval) gbt_intv_decompress(internal);
+
+alter operator family gist_interval_ops using gist owner to m1user1_04;
+
+create operator class gist_interval_ops default for type interval using gist as storage gbtreekey32 function 2(interval, interval) gbt_intv_union(internal, internal),
+	function 1(interval, interval) gbt_intv_consistent(internal, interval, smallint, oid, internal),
+	function 5(interval, interval) gbt_intv_penalty(internal, internal, internal),
+	function 7(interval, interval) gbt_intv_same(gbtreekey32, gbtreekey32, internal),
+	function 6(interval, interval) gbt_intv_picksplit(internal, internal);
+
+alter operator class gist_interval_ops using gist owner to m1user1_04;
+
+create operator family gist_cash_ops using gist;
+
+alter operator family gist_cash_ops using gist add
+    operator 1 <(money,money),
+    operator 2 <=(money,money),
+    operator 3 =(money,money),
+    operator 4 >=(money,money),
+    operator 5 >(money,money),
+    operator 6 <>(money,money),
+    operator 15 <->(money, money) for order by money_ops,
+    function 4(money, money) gbt_decompress(internal),
+    function 9(money, money) gbt_cash_fetch(internal),
+    function 8(money, money) gbt_cash_distance(internal, money, smallint, oid, internal),
+    function 7(money, money) gbt_cash_same(gbtreekey16, gbtreekey16, internal),
+    function 6(money, money) gbt_cash_picksplit(internal, internal),
+    function 5(money, money) gbt_cash_penalty(internal, internal, internal),
+    function 3(money, money) gbt_cash_compress(internal),
+    function 2(money, money) gbt_cash_union(internal, internal),
+    function 1(money, money) gbt_cash_consistent(internal, money, smallint, oid, internal);
+
+alter operator family gist_cash_ops using gist owner to m1user1_04;
+
+create operator class gist_cash_ops default for type money using gist as storage gbtreekey16 function 1(money, money) gbt_cash_consistent(internal, money, smallint, oid, internal),
+	function 7(money, money) gbt_cash_same(gbtreekey16, gbtreekey16, internal),
+	function 6(money, money) gbt_cash_picksplit(internal, internal),
+	function 5(money, money) gbt_cash_penalty(internal, internal, internal),
+	function 2(money, money) gbt_cash_union(internal, internal);
+
+alter operator class gist_cash_ops using gist owner to m1user1_04;
+
+create operator family gist_macaddr_ops using gist;
+
+alter operator family gist_macaddr_ops using gist add
+    operator 1 <(macaddr,macaddr),
+    operator 2 <=(macaddr,macaddr),
+    operator 3 =(macaddr,macaddr),
+    operator 4 >=(macaddr,macaddr),
+    operator 5 >(macaddr,macaddr),
+    operator 6 <>(macaddr,macaddr),
+    function 9(macaddr, macaddr) gbt_macad_fetch(internal),
+    function 3(macaddr, macaddr) gbt_macad_compress(internal),
+    function 4(macaddr, macaddr) gbt_decompress(internal),
+    function 5(macaddr, macaddr) gbt_macad_penalty(internal, internal, internal),
+    function 6(macaddr, macaddr) gbt_macad_picksplit(internal, internal),
+    function 1(macaddr, macaddr) gbt_macad_consistent(internal, macaddr, smallint, oid, internal),
+    function 7(macaddr, macaddr) gbt_macad_same(gbtreekey16, gbtreekey16, internal),
+    function 2(macaddr, macaddr) gbt_macad_union(internal, internal);
+
+alter operator family gist_macaddr_ops using gist owner to m1user1_04;
+
+create operator class gist_macaddr_ops default for type macaddr using gist as storage gbtreekey16 function 2(macaddr, macaddr) gbt_macad_union(internal, internal),
+	function 7(macaddr, macaddr) gbt_macad_same(gbtreekey16, gbtreekey16, internal),
+	function 6(macaddr, macaddr) gbt_macad_picksplit(internal, internal),
+	function 5(macaddr, macaddr) gbt_macad_penalty(internal, internal, internal),
+	function 1(macaddr, macaddr) gbt_macad_consistent(internal, macaddr, smallint, oid, internal);
+
+alter operator class gist_macaddr_ops using gist owner to m1user1_04;
+
+create operator family gist_text_ops using gist;
+
+alter operator family gist_text_ops using gist add
+    operator 1 <(text,text),
+    operator 2 <=(text,text),
+    operator 3 =(text,text),
+    operator 4 >=(text,text),
+    operator 5 >(text,text),
+    operator 6 <>(text,text),
+    function 4(text, text) gbt_var_decompress(internal),
+    function 2(text, text) gbt_text_union(internal, internal),
+    function 1(text, text) gbt_text_consistent(internal, text, smallint, oid, internal),
+    function 3(text, text) gbt_text_compress(internal),
+    function 9(text, text) gbt_var_fetch(internal),
+    function 7(text, text) gbt_text_same(gbtreekey_var, gbtreekey_var, internal),
+    function 6(text, text) gbt_text_picksplit(internal, internal),
+    function 5(text, text) gbt_text_penalty(internal, internal, internal);
+
+alter operator family gist_text_ops using gist owner to m1user1_04;
+
+create operator class gist_text_ops default for type text using gist as storage gbtreekey_var function 1(text, text) gbt_text_consistent(internal, text, smallint, oid, internal),
+	function 7(text, text) gbt_text_same(gbtreekey_var, gbtreekey_var, internal),
+	function 6(text, text) gbt_text_picksplit(internal, internal),
+	function 5(text, text) gbt_text_penalty(internal, internal, internal),
+	function 2(text, text) gbt_text_union(internal, internal);
+
+alter operator class gist_text_ops using gist owner to m1user1_04;
+
+create operator family gist_bpchar_ops using gist;
+
+alter operator family gist_bpchar_ops using gist add
+    operator 1 <(character,character),
+    operator 2 <=(character,character),
+    operator 3 =(character,character),
+    operator 4 >=(character,character),
+    operator 5 >(character,character),
+    operator 6 <>(character,character),
+    function 9(character, character) gbt_var_fetch(internal),
+    function 1(character, character) gbt_bpchar_consistent(internal, char, smallint, oid, internal),
+    function 2(character, character) gbt_text_union(internal, internal),
+    function 3(character, character) gbt_bpchar_compress(internal),
+    function 4(character, character) gbt_var_decompress(internal),
+    function 5(character, character) gbt_text_penalty(internal, internal, internal),
+    function 6(character, character) gbt_text_picksplit(internal, internal),
+    function 7(character, character) gbt_text_same(gbtreekey_var, gbtreekey_var, internal);
+
+alter operator family gist_bpchar_ops using gist owner to m1user1_04;
+
+create operator class gist_bpchar_ops default for type character using gist as storage gbtreekey_var function 6(character, character) gbt_text_picksplit(internal, internal),
+	function 7(character, character) gbt_text_same(gbtreekey_var, gbtreekey_var, internal),
+	function 2(character, character) gbt_text_union(internal, internal),
+	function 5(character, character) gbt_text_penalty(internal, internal, internal),
+	function 1(character, character) gbt_bpchar_consistent(internal, char, smallint, oid, internal);
+
+alter operator class gist_bpchar_ops using gist owner to m1user1_04;
+
+create operator family gist_bytea_ops using gist;
+
+alter operator family gist_bytea_ops using gist add
+    operator 1 <(bytea,bytea),
+    operator 2 <=(bytea,bytea),
+    operator 3 =(bytea,bytea),
+    operator 4 >=(bytea,bytea),
+    operator 5 >(bytea,bytea),
+    operator 6 <>(bytea,bytea),
+    function 4(bytea, bytea) gbt_var_decompress(internal),
+    function 3(bytea, bytea) gbt_bytea_compress(internal),
+    function 2(bytea, bytea) gbt_bytea_union(internal, internal),
+    function 1(bytea, bytea) gbt_bytea_consistent(internal, bytea, smallint, oid, internal),
+    function 9(bytea, bytea) gbt_var_fetch(internal),
+    function 7(bytea, bytea) gbt_bytea_same(gbtreekey_var, gbtreekey_var, internal),
+    function 6(bytea, bytea) gbt_bytea_picksplit(internal, internal),
+    function 5(bytea, bytea) gbt_bytea_penalty(internal, internal, internal);
+
+alter operator family gist_bytea_ops using gist owner to m1user1_04;
+
+create operator class gist_bytea_ops default for type bytea using gist as storage gbtreekey_var function 6(bytea, bytea) gbt_bytea_picksplit(internal, internal),
+	function 7(bytea, bytea) gbt_bytea_same(gbtreekey_var, gbtreekey_var, internal),
+	function 1(bytea, bytea) gbt_bytea_consistent(internal, bytea, smallint, oid, internal),
+	function 2(bytea, bytea) gbt_bytea_union(internal, internal),
+	function 5(bytea, bytea) gbt_bytea_penalty(internal, internal, internal);
+
+alter operator class gist_bytea_ops using gist owner to m1user1_04;
+
+create operator family gist_numeric_ops using gist;
+
+alter operator family gist_numeric_ops using gist add
+    operator 1 <(numeric,numeric),
+    operator 2 <=(numeric,numeric),
+    operator 3 =(numeric,numeric),
+    operator 4 >=(numeric,numeric),
+    operator 5 >(numeric,numeric),
+    operator 6 <>(numeric,numeric),
+    function 4(numeric, numeric) gbt_var_decompress(internal),
+    function 1(numeric, numeric) gbt_numeric_consistent(internal, numeric, smallint, oid, internal),
+    function 3(numeric, numeric) gbt_numeric_compress(internal),
+    function 2(numeric, numeric) gbt_numeric_union(internal, internal),
+    function 9(numeric, numeric) gbt_var_fetch(internal),
+    function 7(numeric, numeric) gbt_numeric_same(gbtreekey_var, gbtreekey_var, internal),
+    function 6(numeric, numeric) gbt_numeric_picksplit(internal, internal),
+    function 5(numeric, numeric) gbt_numeric_penalty(internal, internal, internal);
+
+alter operator family gist_numeric_ops using gist owner to m1user1_04;
+
+create operator class gist_numeric_ops default for type numeric using gist as storage gbtreekey_var function 1(numeric, numeric) gbt_numeric_consistent(internal, numeric, smallint, oid, internal),
+	function 7(numeric, numeric) gbt_numeric_same(gbtreekey_var, gbtreekey_var, internal),
+	function 6(numeric, numeric) gbt_numeric_picksplit(internal, internal),
+	function 5(numeric, numeric) gbt_numeric_penalty(internal, internal, internal),
+	function 2(numeric, numeric) gbt_numeric_union(internal, internal);
+
+alter operator class gist_numeric_ops using gist owner to m1user1_04;
+
+create operator family gist_bit_ops using gist;
+
+alter operator family gist_bit_ops using gist add
+    operator 1 <(bit,bit),
+    operator 2 <=(bit,bit),
+    operator 3 =(bit,bit),
+    operator 4 >=(bit,bit),
+    operator 5 >(bit,bit),
+    operator 6 <>(bit,bit),
+    function 3(bit, bit) gbt_bit_compress(internal),
+    function 4(bit, bit) gbt_var_decompress(internal),
+    function 9(bit, bit) gbt_var_fetch(internal),
+    function 1(bit, bit) gbt_bit_consistent(internal, bit, smallint, oid, internal),
+    function 2(bit, bit) gbt_bit_union(internal, internal),
+    function 5(bit, bit) gbt_bit_penalty(internal, internal, internal),
+    function 7(bit, bit) gbt_bit_same(gbtreekey_var, gbtreekey_var, internal),
+    function 6(bit, bit) gbt_bit_picksplit(internal, internal);
+
+alter operator family gist_bit_ops using gist owner to m1user1_04;
+
+create operator class gist_bit_ops default for type bit using gist as storage gbtreekey_var function 7(bit, bit) gbt_bit_same(gbtreekey_var, gbtreekey_var, internal),
+	function 1(bit, bit) gbt_bit_consistent(internal, bit, smallint, oid, internal),
+	function 2(bit, bit) gbt_bit_union(internal, internal),
+	function 5(bit, bit) gbt_bit_penalty(internal, internal, internal),
+	function 6(bit, bit) gbt_bit_picksplit(internal, internal);
+
+alter operator class gist_bit_ops using gist owner to m1user1_04;
+
+create operator family gist_vbit_ops using gist;
+
+alter operator family gist_vbit_ops using gist add
+    operator 1 <(bit varying,bit varying),
+    operator 2 <=(bit varying,bit varying),
+    operator 3 =(bit varying,bit varying),
+    operator 4 >=(bit varying,bit varying),
+    operator 5 >(bit varying,bit varying),
+    operator 6 <>(bit varying,bit varying),
+    function 7(bit varying, bit varying) gbt_bit_same(gbtreekey_var, gbtreekey_var, internal),
+    function 9(bit varying, bit varying) gbt_var_fetch(internal),
+    function 1(bit varying, bit varying) gbt_bit_consistent(internal, bit, smallint, oid, internal),
+    function 3(bit varying, bit varying) gbt_bit_compress(internal),
+    function 4(bit varying, bit varying) gbt_var_decompress(internal),
+    function 5(bit varying, bit varying) gbt_bit_penalty(internal, internal, internal),
+    function 6(bit varying, bit varying) gbt_bit_picksplit(internal, internal),
+    function 2(bit varying, bit varying) gbt_bit_union(internal, internal);
+
+alter operator family gist_vbit_ops using gist owner to m1user1_04;
+
+create operator class gist_vbit_ops default for type bit varying using gist as storage gbtreekey_var function 7(bit varying, bit varying) gbt_bit_same(gbtreekey_var, gbtreekey_var, internal),
+	function 5(bit varying, bit varying) gbt_bit_penalty(internal, internal, internal),
+	function 1(bit varying, bit varying) gbt_bit_consistent(internal, bit, smallint, oid, internal),
+	function 6(bit varying, bit varying) gbt_bit_picksplit(internal, internal),
+	function 2(bit varying, bit varying) gbt_bit_union(internal, internal);
+
+alter operator class gist_vbit_ops using gist owner to m1user1_04;
+
+create operator family gist_inet_ops using gist;
+
+alter operator family gist_inet_ops using gist add
+    operator 1 <(inet,inet),
+    operator 2 <=(inet,inet),
+    operator 3 =(inet,inet),
+    operator 4 >=(inet,inet),
+    operator 5 >(inet,inet),
+    operator 6 <>(inet,inet),
+    function 4(inet, inet) gbt_decompress(internal),
+    function 6(inet, inet) gbt_inet_picksplit(internal, internal),
+    function 7(inet, inet) gbt_inet_same(gbtreekey16, gbtreekey16, internal),
+    function 2(inet, inet) gbt_inet_union(internal, internal),
+    function 1(inet, inet) gbt_inet_consistent(internal, inet, smallint, oid, internal),
+    function 3(inet, inet) gbt_inet_compress(internal),
+    function 5(inet, inet) gbt_inet_penalty(internal, internal, internal);
+
+alter operator family gist_inet_ops using gist owner to m1user1_04;
+
+create operator class gist_inet_ops default for type inet using gist as storage gbtreekey16 function 2(inet, inet) gbt_inet_union(internal, internal),
+	function 7(inet, inet) gbt_inet_same(gbtreekey16, gbtreekey16, internal),
+	function 6(inet, inet) gbt_inet_picksplit(internal, internal),
+	function 5(inet, inet) gbt_inet_penalty(internal, internal, internal),
+	function 1(inet, inet) gbt_inet_consistent(internal, inet, smallint, oid, internal);
+
+alter operator class gist_inet_ops using gist owner to m1user1_04;
+
+create operator family gist_cidr_ops using gist;
+
+alter operator family gist_cidr_ops using gist add
+    operator 1 <(inet,inet),
+    operator 2 <=(inet,inet),
+    operator 3 =(inet,inet),
+    operator 4 >=(inet,inet),
+    operator 5 >(inet,inet),
+    operator 6 <>(inet,inet),
+    function 7(cidr, cidr) gbt_inet_same(gbtreekey16, gbtreekey16, internal),
+    function 1(cidr, cidr) gbt_inet_consistent(internal, inet, smallint, oid, internal),
+    function 2(cidr, cidr) gbt_inet_union(internal, internal),
+    function 3(cidr, cidr) gbt_inet_compress(internal),
+    function 4(cidr, cidr) gbt_decompress(internal),
+    function 5(cidr, cidr) gbt_inet_penalty(internal, internal, internal),
+    function 6(cidr, cidr) gbt_inet_picksplit(internal, internal);
+
+alter operator family gist_cidr_ops using gist owner to m1user1_04;
+
+create operator class gist_cidr_ops default for type cidr using gist as storage gbtreekey16 function 2(cidr, cidr) gbt_inet_union(internal, internal),
+	function 1(cidr, cidr) gbt_inet_consistent(internal, inet, smallint, oid, internal),
+	function 7(cidr, cidr) gbt_inet_same(gbtreekey16, gbtreekey16, internal),
+	function 6(cidr, cidr) gbt_inet_picksplit(internal, internal),
+	function 5(cidr, cidr) gbt_inet_penalty(internal, internal, internal);
+
+alter operator class gist_cidr_ops using gist owner to m1user1_04;
+
+create operator family gist_uuid_ops using gist;
+
+alter operator family gist_uuid_ops using gist add
+    operator 1 <(uuid,uuid),
+    operator 2 <=(uuid,uuid),
+    operator 3 =(uuid,uuid),
+    operator 4 >=(uuid,uuid),
+    operator 5 >(uuid,uuid),
+    operator 6 <>(uuid,uuid),
+    function 4(uuid, uuid) gbt_decompress(internal),
+    function 5(uuid, uuid) gbt_uuid_penalty(internal, internal, internal),
+    function 9(uuid, uuid) gbt_uuid_fetch(internal),
+    function 7(uuid, uuid) gbt_uuid_same(gbtreekey32, gbtreekey32, internal),
+    function 1(uuid, uuid) gbt_uuid_consistent(internal, uuid, smallint, oid, internal),
+    function 2(uuid, uuid) gbt_uuid_union(internal, internal),
+    function 3(uuid, uuid) gbt_uuid_compress(internal),
+    function 6(uuid, uuid) gbt_uuid_picksplit(internal, internal);
+
+alter operator family gist_uuid_ops using gist owner to m1user1_04;
+
+create operator class gist_uuid_ops default for type uuid using gist as storage gbtreekey32 function 2(uuid, uuid) gbt_uuid_union(internal, internal),
+	function 5(uuid, uuid) gbt_uuid_penalty(internal, internal, internal),
+	function 6(uuid, uuid) gbt_uuid_picksplit(internal, internal),
+	function 7(uuid, uuid) gbt_uuid_same(gbtreekey32, gbtreekey32, internal),
+	function 1(uuid, uuid) gbt_uuid_consistent(internal, uuid, smallint, oid, internal);
+
+alter operator class gist_uuid_ops using gist owner to m1user1_04;
+
+create operator family gist_macaddr8_ops using gist;
+
+alter operator family gist_macaddr8_ops using gist add
+    operator 1 <(macaddr8,macaddr8),
+    operator 2 <=(macaddr8,macaddr8),
+    operator 3 =(macaddr8,macaddr8),
+    operator 4 >=(macaddr8,macaddr8),
+    operator 5 >(macaddr8,macaddr8),
+    operator 6 <>(macaddr8,macaddr8),
+    function 9(macaddr8, macaddr8) gbt_macad8_fetch(internal),
+    function 3(macaddr8, macaddr8) gbt_macad8_compress(internal),
+    function 7(macaddr8, macaddr8) gbt_macad8_same(gbtreekey16, gbtreekey16, internal),
+    function 4(macaddr8, macaddr8) gbt_decompress(internal),
+    function 5(macaddr8, macaddr8) gbt_macad8_penalty(internal, internal, internal),
+    function 2(macaddr8, macaddr8) gbt_macad8_union(internal, internal),
+    function 6(macaddr8, macaddr8) gbt_macad8_picksplit(internal, internal),
+    function 1(macaddr8, macaddr8) gbt_macad8_consistent(internal, macaddr8, smallint, oid, internal);
+
+alter operator family gist_macaddr8_ops using gist owner to m1user1_04;
+
+create operator class gist_macaddr8_ops default for type macaddr8 using gist as storage gbtreekey16 function 6(macaddr8, macaddr8) gbt_macad8_picksplit(internal, internal),
+	function 5(macaddr8, macaddr8) gbt_macad8_penalty(internal, internal, internal),
+	function 2(macaddr8, macaddr8) gbt_macad8_union(internal, internal),
+	function 7(macaddr8, macaddr8) gbt_macad8_same(gbtreekey16, gbtreekey16, internal),
+	function 1(macaddr8, macaddr8) gbt_macad8_consistent(internal, macaddr8, smallint, oid, internal);
+
+alter operator class gist_macaddr8_ops using gist owner to m1user1_04;
+
+create operator family gist_enum_ops using gist;
+
+alter operator family gist_enum_ops using gist add
+    operator 1 <(anyenum,anyenum),
+    operator 2 <=(anyenum,anyenum),
+    operator 3 =(anyenum,anyenum),
+    operator 4 >=(anyenum,anyenum),
+    operator 5 >(anyenum,anyenum),
+    operator 6 <>(anyenum,anyenum),
+    function 9(anyenum, anyenum) gbt_enum_fetch(internal),
+    function 1(anyenum, anyenum) gbt_enum_consistent(internal, anyenum, smallint, oid, internal),
+    function 2(anyenum, anyenum) gbt_enum_union(internal, internal),
+    function 3(anyenum, anyenum) gbt_enum_compress(internal),
+    function 4(anyenum, anyenum) gbt_decompress(internal),
+    function 5(anyenum, anyenum) gbt_enum_penalty(internal, internal, internal),
+    function 6(anyenum, anyenum) gbt_enum_picksplit(internal, internal),
+    function 7(anyenum, anyenum) gbt_enum_same(gbtreekey8, gbtreekey8, internal);
+
+alter operator family gist_enum_ops using gist owner to m1user1_04;
+
+create operator class gist_enum_ops default for type anyenum using gist as storage gbtreekey8 function 6(anyenum, anyenum) gbt_enum_picksplit(internal, internal),
+	function 7(anyenum, anyenum) gbt_enum_same(gbtreekey8, gbtreekey8, internal),
+	function 2(anyenum, anyenum) gbt_enum_union(internal, internal),
+	function 1(anyenum, anyenum) gbt_enum_consistent(internal, anyenum, smallint, oid, internal),
+	function 5(anyenum, anyenum) gbt_enum_penalty(internal, internal, internal);
+
+alter operator class gist_enum_ops using gist owner to m1user1_04;
+
+create operator family gist_bool_ops using gist;
+
+alter operator family gist_bool_ops using gist add
+    operator 1 <(boolean,boolean),
+    operator 2 <=(boolean,boolean),
+    operator 3 =(boolean,boolean),
+    operator 4 >=(boolean,boolean),
+    operator 5 >(boolean,boolean),
+    operator 6 <>(boolean,boolean),
+    function 3(boolean, boolean) gbt_bool_compress(internal),
+    function 4(boolean, boolean) gbt_decompress(internal),
+    function 5(boolean, boolean) gbt_bool_penalty(internal, internal, internal),
+    function 6(boolean, boolean) gbt_bool_picksplit(internal, internal),
+    function 2(boolean, boolean) gbt_bool_union(internal, internal),
+    function 7(boolean, boolean) gbt_bool_same(gbtreekey2, gbtreekey2, internal),
+    function 1(boolean, boolean) gbt_bool_consistent(internal, boolean, smallint, oid, internal),
+    function 9(boolean, boolean) gbt_bool_fetch(internal);
+
+alter operator family gist_bool_ops using gist owner to m1user1_04;
+
+create operator class gist_bool_ops default for type boolean using gist as storage gbtreekey2 function 5(boolean, boolean) gbt_bool_penalty(internal, internal, internal),
+	function 6(boolean, boolean) gbt_bool_picksplit(internal, internal),
+	function 7(boolean, boolean) gbt_bool_same(gbtreekey2, gbtreekey2, internal),
+	function 1(boolean, boolean) gbt_bool_consistent(internal, boolean, smallint, oid, internal),
+	function 2(boolean, boolean) gbt_bool_union(internal, internal);
+
+alter operator class gist_bool_ops using gist owner to m1user1_04;
 

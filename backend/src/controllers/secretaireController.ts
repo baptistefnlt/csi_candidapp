@@ -153,18 +153,18 @@ export const refuserAttestationRC = async (req: Request, res: Response) => {
    ========================================================= */
 
 // GET /api/dashboard/secretaire/etudiants?userId=...
+// GET /api/dashboard/secretaire/etudiants?userId=...
 export const listerEtudiants = async (req: Request, res: Response) => {
   try {
     const userId = getUserIdFromReq(req);
     if (!userId) return res.status(400).json({ ok: false, error: 'userId manquant' });
 
-    // sécurité: vérifier que c'est bien une secrétaire
     const secretaireId = await getSecretaireIdFromUserId(userId);
     if (!secretaireId) {
       return res.status(403).json({ ok: false, error: 'Accès interdit (profil secrétaire introuvable)' });
     }
 
-    // ✅ uniquement une vue
+    // ✅ Filtrer par groupe de la secrétaire via nouvelle vue
     const result = await query(`
       SELECT
         utilisateur_id,
@@ -178,10 +178,11 @@ export const listerEtudiants = async (req: Request, res: Response) => {
         en_recherche,
         profil_visible,
         cv_url
-      FROM public.v_profil_etudiant
+      FROM public.v_etudiants_par_secretaire
+      WHERE secretaire_id = $1
       ORDER BY etudiant_id DESC
       LIMIT 200
-    `);
+    `, [secretaireId]);
 
     return res.status(200).json({ ok: true, etudiants: result.rows });
   } catch (error: any) {
@@ -203,6 +204,12 @@ export const creerEtudiant = async (req: Request, res: Response) => {
     }
 
     const { nom, prenom, email, password, formation, promo } = req.body;
+
+    const promoInt = parseInt(promo, 10);
+
+    if (promo && isNaN(promoInt)) {
+      return res.status(400).json({ ok: false, error: 'Promo doit être un nombre valide' });
+    }
 
     if (!nom || !prenom || !email || !password || !formation) {
       return res.status(400).json({ ok: false, error: 'Tous les champs obligatoires doivent être remplis' });
@@ -233,7 +240,7 @@ export const creerEtudiant = async (req: Request, res: Response) => {
           ($1, $2, $3, $4, $5, $6, $7)
         RETURNING utilisateur_id_created, etudiant_id_created
         `,
-        [userId, email, passwordHash, nom, prenom, formation, promo || null]
+        [userId, email, passwordHash, nom, prenom, formation, promoInt]
       );
 
       await client.query('COMMIT');

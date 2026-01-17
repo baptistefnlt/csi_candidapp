@@ -312,7 +312,7 @@
         <td class="px-6 py-3">${escapeHtml(e.nom)}</td>
         <td class="px-6 py-3">${escapeHtml(e.prenom)}</td>
         <td class="px-6 py-3">${escapeHtml(e.formation)}</td>
-        <td class="px-6 py-3">${escapeHtml(e.promo ?? "")}</td>
+        <td class="px-6 py-3">${escapeHtml(e.promo)}</td>
         <td class="px-6 py-3">${boolIcon(e.en_recherche)}</td>
         <td class="px-6 py-3">${boolIcon(e.profil_visible)}</td>
       `;
@@ -328,13 +328,15 @@
 
     // ==================== CREATE ====================
     async function createEtudiant() {
+      const promoVal = val("promo");
+
       const payload = {
         nom: val("nom"),
         prenom: val("prenom"),
         email: val("email"),
         password: val("password"),
         formation: val("formation"),
-        promo: val("promo") || null
+        promo: promoVal ? parseInt(promoVal, 10) : null
       };
 
       try {

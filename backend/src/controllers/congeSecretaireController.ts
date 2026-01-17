@@ -15,7 +15,7 @@ function getUserIdFromReq(req: Request): number | null {
 // STRICT : seul un VRAI secrétaire peut déclarer son congé
 async function getSecretaireIdStrict(userId: number): Promise<number | null> {
   const r = await query(
-    'SELECT secretaire_id FROM public.v_secretaire_by_user WHERE utilisateur_id = $1 LIMIT 1',
+    'SELECT secretaire_id FROM public.v_secretaire_autorise_by_user WHERE utilisateur_id = $1 LIMIT 1',
     [userId]
   );
   return r.rows[0]?.secretaire_id ?? null;
