@@ -70,9 +70,9 @@ app.get('/enseignant/referentiel', (_req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'referentiel.html'));
 });
 
-// Route pour la validation des stages
+// Route pour la validation des affectations
 app.get('/enseignant/affectations-en-attente', (_req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'validation-stage.html'));
+    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'enseignant-validations.html'));
 });
 
 app.get('/enseignant/archives', (_req, res) => {

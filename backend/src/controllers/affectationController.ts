@@ -109,3 +109,79 @@ export async function validate(req: Request, res: Response) {
         });
     }
 }
+
+/**
+ * Refuser une candidature (Refus Pédagogique)
+ * @route POST /api/affectations/refuse
+ */
+export async function refuseCandidature(req: Request, res: Response) {
+    const { candidature_id }: PayloadValidation = req.body;
+
+    // Validation du payload
+    if (!candidature_id || typeof candidature_id !== 'number') {
+        return res.status(400).json({
+            ok: false,
+            error: 'candidature_id est requis et doit être un nombre'
+        });
+    }
+
+    try {
+        // Fire & Forget - Pas de RETURNING (le trigger gère la logique)
+        await query(
+            'INSERT INTO v_action_refuser_candidature (candidature_id) VALUES ($1)',
+            [candidature_id]
+        );
+
+        // Si on arrive ici sans exception, le trigger a validé l'opération
+        return res.status(200).json({
+            ok: true,
+            message: 'Candidature refusée'
+        });
+
+    } catch (error: any) {
+        console.error('Erreur lors du refus de la candidature:', error);
+
+        // Gestion des erreurs spécifiques du trigger
+        const errorMessage = error.message || '';
+
+        // Action impossible/illégale (messages du trigger)
+        if (
+            errorMessage.includes('Action impossible') ||
+            errorMessage.includes('Action illégale') ||
+            errorMessage.includes('déjà') ||
+            errorMessage.includes('already') ||
+            errorMessage.includes('statut')
+        ) {
+            return res.status(409).json({
+                ok: false,
+                error: errorMessage.replace(/^ERROR:\s*/, '') || 'Cette action n\'est pas autorisée pour cette candidature'
+            });
+        }
+
+        // Candidature introuvable
+        if (
+            errorMessage.includes('introuvable') ||
+            errorMessage.includes('not found') ||
+            errorMessage.includes('n\'existe pas')
+        ) {
+            return res.status(404).json({
+                ok: false,
+                error: 'Candidature introuvable'
+            });
+        }
+
+        // Erreur générique règle métier
+        if (error.code === 'P0001' || errorMessage.includes('RAISE')) {
+            return res.status(400).json({
+                ok: false,
+                error: errorMessage.replace(/^ERROR:\s*/, '') || 'Règle métier non respectée'
+            });
+        }
+
+        // Erreur serveur générique
+        return res.status(500).json({
+            ok: false,
+            error: 'Erreur interne lors du refus de la candidature'
+        });
+    }
+}
