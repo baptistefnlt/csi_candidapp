@@ -2,8 +2,8 @@
 <html lang="fr">
 
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <title>Administration - Candidapp</title>
@@ -48,480 +48,562 @@
 
 <body class="bg-gray-50 min-h-screen">
 
-<!-- Header -->
-<header class="bg-white shadow-sm sticky top-0 z-50">
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <!-- Logo -->
-            <a href="/" class="flex items-center space-x-2">
-                <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-xl font-bold text-gray-900">Candidapp</span>
-                    <span class="text-xs text-blue-600 block font-medium">Administration</span>
-                </div>
-            </a>
-
-            <!-- Navigation -->
-            <div class="hidden md:flex items-center space-x-6">
-                <a href="/admin/dashboard" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Dashboard</a>
-                <a href="/offres" class="text-gray-600 hover:text-blue-600 transition">Offres</a>
-            </div>
-
-            <!-- User Menu -->
-            <div class="flex items-center space-x-4">
-                <div id="userBadge" class="hidden md:flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-full">
-                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                        <span id="userInitial" class="text-white font-semibold text-sm"></span>
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-2">
+                    <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                     </div>
-                    <span id="userEmailBadge" class="text-blue-700 font-medium text-sm max-w-[120px] truncate"></span>
+                    <div>
+                        <span class="text-xl font-bold text-gray-900">Candidapp</span>
+                        <span class="text-xs text-blue-600 block font-medium">Administration</span>
+                    </div>
+                </a>
+
+                <!-- Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/admin/dashboard"
+                        class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Dashboard</a>
                 </div>
-                <button id="logoutBtn"
+
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <div id="userBadge"
+                        class="hidden md:flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-full">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span id="userInitial" class="text-white font-semibold text-sm"></span>
+                        </div>
+                        <span id="userEmailBadge"
+                            class="text-blue-700 font-medium text-sm max-w-[120px] truncate"></span>
+                    </div>
+                    <button id="logoutBtn"
                         class="flex items-center space-x-2 text-gray-600 hover:text-red-600 font-medium transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span class="hidden sm:inline">Déconnexion</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Page Header -->
+    <section class="gradient-bg text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-4xl font-bold mb-2">Panneau d'Administration</h1>
+            <p class="text-blue-200">Gestion des groupes et archivage annuel</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- KPIs -->
+        <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
+                <p class="text-xs font-medium text-gray-500 mb-1">Utilisateurs</p>
+                <p id="statUtilisateurs" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
+                <p class="text-xs font-medium text-gray-500 mb-1">Étudiants</p>
+                <p id="statEtudiants" class="text-2xl font-bold text-blue-600">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
+                <p class="text-xs font-medium text-gray-500 mb-1">Entreprises</p>
+                <p id="statEntreprises" class="text-2xl font-bold text-green-600">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
+                <p class="text-xs font-medium text-gray-500 mb-1">Offres actives</p>
+                <p id="statOffres" class="text-2xl font-bold text-purple-600">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
+                <p class="text-xs font-medium text-gray-500 mb-1">Groupes</p>
+                <p id="statGroupes" class="text-2xl font-bold text-orange-600">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
+                <p class="text-xs font-medium text-gray-500 mb-1">Affectations</p>
+                <p id="statAffectations" class="text-2xl font-bold text-teal-600">-</p>
+            </div>
+        </div>
+
+        <!-- Section Clôture Annuelle -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8 border-2 border-red-100">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Clôture Annuelle</h2>
+                    <p class="text-sm text-gray-500">Termine l'année universitaire et prépare la base pour la nouvelle
+                        année</p>
+                </div>
+                <button onclick="openClotureModal()" id="btnCloture"
+                    class="flex items-center space-x-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition shadow-lg hover:shadow-xl">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    <span class="hidden sm:inline">Déconnexion</span>
+                    <span>Clôturer l'année universitaire</span>
                 </button>
             </div>
-        </div>
-    </nav>
-</header>
-
-<!-- Page Header -->
-<section class="gradient-bg text-white py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-bold mb-2">Panneau d'Administration</h1>
-        <p class="text-blue-200">Gestion des groupes et archivage annuel</p>
-    </div>
-</section>
-
-<!-- Main Content -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-    <!-- KPIs -->
-    <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
-            <p class="text-xs font-medium text-gray-500 mb-1">Utilisateurs</p>
-            <p id="statUtilisateurs" class="text-2xl font-bold text-gray-900">-</p>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
-            <p class="text-xs font-medium text-gray-500 mb-1">Étudiants</p>
-            <p id="statEtudiants" class="text-2xl font-bold text-blue-600">-</p>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
-            <p class="text-xs font-medium text-gray-500 mb-1">Entreprises</p>
-            <p id="statEntreprises" class="text-2xl font-bold text-green-600">-</p>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
-            <p class="text-xs font-medium text-gray-500 mb-1">Offres actives</p>
-            <p id="statOffres" class="text-2xl font-bold text-purple-600">-</p>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
-            <p class="text-xs font-medium text-gray-500 mb-1">Groupes</p>
-            <p id="statGroupes" class="text-2xl font-bold text-orange-600">-</p>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 card-hover">
-            <p class="text-xs font-medium text-gray-500 mb-1">Affectations</p>
-            <p id="statAffectations" class="text-2xl font-bold text-teal-600">-</p>
-        </div>
-    </div>
-
-    <!-- Section Archivage -->
-    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-xl font-bold text-gray-900">Archivage Annuel</h2>
-                <p class="text-sm text-gray-500">Archive les données anciennes et nettoie la base de données</p>
-            </div>
-            <button onclick="lancerArchivage()" id="btnArchivage"
-                    class="flex items-center space-x-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition shadow-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                </svg>
-                <span>Lancer l'archivage</span>
-            </button>
-        </div>
-        <div id="archivageResult" class="hidden mt-4 p-4 rounded-lg"></div>
-        <div class="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-            <div class="flex items-start">
-                <svg class="w-5 h-5 text-amber-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                <div class="text-sm text-amber-800">
-                    <p class="font-medium">Actions de l'archivage :</p>
-                    <ul class="mt-2 list-disc list-inside space-y-1">
-                        <li>Archive les offres expirées depuis plus d'1 an</li>
-                        <li>Annule les candidatures en attente sur les offres archivées</li>
-                        <li>Archive les attestations RC expirées</li>
-                        <li>Désactive les comptes étudiants inactifs depuis 2 ans</li>
-                    </ul>
+            <div class="mt-4 p-4 bg-red-50 rounded-lg border-2 border-red-300">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-red-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div class="text-sm text-red-900">
+                        <p class="font-bold text-base mb-2">⚠️ ATTENTION : Action irréversible</p>
+                        <p class="mb-2">La clôture annuelle effectue les opérations suivantes :</p>
+                        <ul class="list-disc list-inside space-y-1 ml-2">
+                            <li>Archive définitivement les offres de stage expirées</li>
+                            <li>Supprime les candidatures en attente ou refusées</li>
+                            <li>Archive les attestations RC et affectations</li>
+                            <li>Désactive les comptes étudiants inactifs</li>
+                        </ul>
+                        <p class="mt-3 font-semibold">⏱️ L'opération peut prendre 5 à 10 secondes.</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Section Gestion des Groupes -->
-    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="text-xl font-bold text-gray-900">Gestion des Groupes</h2>
-                <p class="text-sm text-gray-500">Créez et gérez les groupes d'étudiants avec leurs référents</p>
-            </div>
-            <button onclick="openCreateGroupeModal()"
+        <!-- Section Gestion des Groupes -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Gestion des Groupes</h2>
+                    <p class="text-sm text-gray-500">Créez et gérez les groupes d'étudiants avec leurs référents</p>
+                </div>
+                <button onclick="openCreateGroupeModal()"
                     class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Nouveau groupe</span>
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingGroupes" class="flex flex-col items-center justify-center py-8">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-gray-600">Chargement des groupes...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyGroupes" class="hidden text-center py-12">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span>Nouveau groupe</span>
-            </button>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Aucun groupe</h3>
+                <p class="text-gray-500">Créez votre premier groupe d'étudiants</p>
+            </div>
+
+            <!-- Groupes Table -->
+            <div id="groupesContainer" class="hidden overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Nom du groupe</th>
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Année</th>
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Enseignant référent</th>
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Secrétaire</th>
+                            <th class="text-center py-3 px-4 text-sm font-semibold text-gray-600">Étudiants</th>
+                            <th class="text-center py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="groupesTableBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- Loading State -->
-        <div id="loadingGroupes" class="flex flex-col items-center justify-center py-8">
-            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
-            <p class="text-gray-600">Chargement des groupes...</p>
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyGroupes" class="hidden text-center py-12">
-            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Aucun groupe</h3>
-            <p class="text-gray-500">Créez votre premier groupe d'étudiants</p>
-        </div>
-
-        <!-- Groupes Table -->
-        <div id="groupesContainer" class="hidden overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Nom du groupe</th>
-                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Année</th>
-                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Enseignant référent</th>
-                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Secrétaire</th>
-                    <th class="text-center py-3 px-4 text-sm font-semibold text-gray-600">Étudiants</th>
-                    <th class="text-center py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
-                </tr>
-                </thead>
-                <tbody id="groupesTableBody">
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Section Gestion des Comptes -->
-    <div class="grid md:grid-cols-2 gap-6">
-        <!-- Enseignants -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-900">Enseignants</h2>
-                    <p class="text-sm text-gray-500">Créez des comptes enseignants</p>
-                </div>
-                <button onclick="openCreateEnseignantModal()"
+        <!-- Section Gestion des Comptes -->
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Enseignants -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Enseignants</h2>
+                        <p class="text-sm text-gray-500">Créez des comptes enseignants</p>
+                    </div>
+                    <button onclick="openCreateEnseignantModal()"
                         class="flex items-center space-x-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>Ajouter</span>
-                </button>
-            </div>
-            <div id="enseignantsList" class="space-y-2 max-h-64 overflow-y-auto">
-                <!-- Liste des enseignants -->
-            </div>
-        </div>
-
-        <!-- Secrétaires -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-900">Secrétaires</h2>
-                    <p class="text-sm text-gray-500">Créez des comptes secrétaires</p>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Ajouter</span>
+                    </button>
                 </div>
-                <button onclick="openCreateSecretaireModal()"
+                <div id="enseignantsList" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Liste des enseignants -->
+                </div>
+            </div>
+
+            <!-- Secrétaires -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Secrétaires</h2>
+                        <p class="text-sm text-gray-500">Créez des comptes secrétaires</p>
+                    </div>
+                    <button onclick="openCreateSecretaireModal()"
                         class="flex items-center space-x-2 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>Ajouter</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Ajouter</span>
+                    </button>
+                </div>
+                <div id="secretairesList" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Liste des secrétaires -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Création/Édition Groupe -->
+    <div id="groupeModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">
+            <div class="p-6 border-b border-gray-100">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Nouveau groupe</h3>
+            </div>
+            <form id="groupeForm" class="p-6 space-y-4">
+                <input type="hidden" id="groupeId">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom du groupe *</label>
+                    <input type="text" id="nomGroupe" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Ex: M1 Informatique 2025">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Année scolaire *</label>
+                    <input type="number" id="anneeScolaire" required min="2020" max="2100"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Ex: 2025">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Enseignant référent *</label>
+                    <select id="enseignantSelect" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Sélectionner un enseignant</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Secrétaire gestionnaire *</label>
+                    <select id="secretaireSelect" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Sélectionner une secrétaire</option>
+                    </select>
+                </div>
+
+                <div id="formError" class="hidden p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
+            </form>
+            <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeGroupeModal()" type="button"
+                    class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition">
+                    Annuler
+                </button>
+                <button onclick="submitGroupeForm()" type="button"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Enregistrer
                 </button>
             </div>
-            <div id="secretairesList" class="space-y-2 max-h-64 overflow-y-auto">
-                <!-- Liste des secrétaires -->
+        </div>
+    </div>
+
+    <!-- Modal Clôture Annuelle (Pattern GitHub - Double Confirmation) -->
+    <div id="clotureModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+        style="backdrop-filter: blur(4px);">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl mx-4 border-4 border-red-500">
+            <!-- Header avec fond rouge danger -->
+            <div class="p-6 bg-red-600 text-white rounded-t-lg">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <h3 class="text-2xl font-bold">⚠️ Zone de Danger</h3>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Avertissement critique -->
+                <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-6">
+                    <p class="font-bold text-red-900 text-lg mb-3">Action irréversible !</p>
+                    <p class="text-red-800 mb-3">La clôture annuelle va :</p>
+                    <ul class="text-red-800 space-y-2 ml-4">
+                        <li class="flex items-start">
+                            <span class="mr-2">•</span>
+                            <span>Archiver définitivement les offres expirées</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">•</span>
+                            <span>Supprimer les candidatures en attente ou refusées</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">•</span>
+                            <span>Archiver les attestations RC et affectations</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">•</span>
+                            <span>Désactiver les comptes étudiants inactifs</span>
+                        </li>
+                    </ul>
+                    <p class="text-red-900 font-bold mt-3">⚠️ Impossible d'annuler cette opération</p>
+                </div>
+
+                <!-- Champ de confirmation -->
+                <div class="space-y-3">
+                    <label class="block">
+                        <span class="text-sm font-semibold text-gray-900 mb-2 block">
+                            Pour confirmer, saisissez l'année universitaire à clôturer :
+                        </span>
+                        <span class="text-xs text-gray-600 block mb-2">
+                            Format attendu : <strong class="font-mono bg-gray-100 px-2 py-1 rounded"
+                                id="expectedFormat">YYYY-YYYY</strong> (ex: 2024-2025)
+                        </span>
+                        <input type="text" id="clotureConfirmInput" placeholder="Ex: 2024-2025"
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 font-mono text-lg"
+                            autocomplete="off">
+                    </label>
+                    <p id="clotureInputFeedback" class="text-sm text-gray-500 h-5"></p>
+                </div>
+
+                <!-- Message d'erreur -->
+                <div id="clotureError"
+                    class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm"></div>
+            </div>
+
+            <!-- Footer avec boutons -->
+            <div class="p-6 bg-gray-50 rounded-b-lg flex justify-end space-x-3 border-t border-gray-200">
+                <button onclick="closeClotureModal()" type="button" id="btnCancelCloture"
+                    class="px-6 py-2.5 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition">
+                    Annuler
+                </button>
+                <button onclick="confirmerCloture()" type="button" id="btnConfirmCloture" disabled
+                    class="px-6 py-2.5 bg-red-600 text-white rounded-lg font-bold transition disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-700 disabled:hover:bg-red-600">
+                    <span id="confirmButtonText">Confirmer la clôture</span>
+                </button>
             </div>
         </div>
     </div>
-</main>
 
-<!-- Modal Création/Édition Groupe -->
-<div id="groupeModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">
-        <div class="p-6 border-b border-gray-100">
-            <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Nouveau groupe</h3>
-        </div>
-        <form id="groupeForm" class="p-6 space-y-4">
-            <input type="hidden" id="groupeId">
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nom du groupe *</label>
-                <input type="text" id="nomGroupe" required
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="Ex: M1 Informatique 2025">
+    <!-- Modal Création Enseignant -->
+    <div id="enseignantModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-xl font-bold text-gray-900">Nouvel enseignant</h3>
             </div>
+            <form id="enseignantForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                    <input type="text" id="enseignantNom"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Ex: Dupont">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Année scolaire *</label>
-                <input type="number" id="anneeScolaire" required min="2020" max="2100"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="Ex: 2025">
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" id="enseignantEmail" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="enseignant@univ.fr">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Enseignant référent *</label>
-                <select id="enseignantSelect" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Sélectionner un enseignant</option>
-                </select>
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
+                    <input type="password" id="enseignantPassword" required minlength="6"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Minimum 6 caractères">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Secrétaire gestionnaire *</label>
-                <select id="secretaireSelect" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Sélectionner une secrétaire</option>
-                </select>
-            </div>
-
-            <div id="formError" class="hidden p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
-        </form>
-        <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
-            <button onclick="closeGroupeModal()" type="button"
+                <div id="enseignantFormError" class="hidden p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
+            </form>
+            <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeEnseignantModal()" type="button"
                     class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition">
-                Annuler
-            </button>
-            <button onclick="submitGroupeForm()" type="button"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
-                Enregistrer
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Création Enseignant -->
-<div id="enseignantModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
-        <div class="p-6 border-b border-gray-100">
-            <h3 class="text-xl font-bold text-gray-900">Nouvel enseignant</h3>
-        </div>
-        <form id="enseignantForm" class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                <input type="text" id="enseignantNom"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                       placeholder="Ex: Dupont">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input type="email" id="enseignantEmail" required
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                       placeholder="enseignant@univ.fr">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
-                <input type="password" id="enseignantPassword" required minlength="6"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                       placeholder="Minimum 6 caractères">
-            </div>
-
-            <div id="enseignantFormError" class="hidden p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
-        </form>
-        <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
-            <button onclick="closeEnseignantModal()" type="button"
-                    class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition">
-                Annuler
-            </button>
-            <button onclick="submitEnseignantForm()" type="button"
+                    Annuler
+                </button>
+                <button onclick="submitEnseignantForm()" type="button"
                     class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition">
-                Créer
-            </button>
+                    Créer
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Création Secrétaire -->
-<div id="secretaireModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
-        <div class="p-6 border-b border-gray-100">
-            <h3 class="text-xl font-bold text-gray-900">Nouvelle secrétaire</h3>
-        </div>
-        <form id="secretaireForm" class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                <input type="text" id="secretaireNom"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                       placeholder="Ex: Martin">
+    <!-- Modal Création Secrétaire -->
+    <div id="secretaireModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-xl font-bold text-gray-900">Nouvelle secrétaire</h3>
             </div>
+            <form id="secretaireForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                    <input type="text" id="secretaireNom"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        placeholder="Ex: Martin">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input type="email" id="secretaireEmail" required
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                       placeholder="secretaire@univ.fr">
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" id="secretaireEmail" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        placeholder="secretaire@univ.fr">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
-                <input type="password" id="secretairePassword" required minlength="6"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                       placeholder="Minimum 6 caractères">
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
+                    <input type="password" id="secretairePassword" required minlength="6"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        placeholder="Minimum 6 caractères">
+                </div>
 
-            <div id="secretaireFormError" class="hidden p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
-        </form>
-        <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
-            <button onclick="closeSecretaireModal()" type="button"
+                <div id="secretaireFormError" class="hidden p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
+            </form>
+            <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeSecretaireModal()" type="button"
                     class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition">
-                Annuler
-            </button>
-            <button onclick="submitSecretaireForm()" type="button"
+                    Annuler
+                </button>
+                <button onclick="submitSecretaireForm()" type="button"
                     class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition">
-                Créer
-            </button>
+                    Créer
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Toast -->
-<div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all"></div>
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all"></div>
 
-<script>
-    const API_BASE = '/api/admin';
-    let currentUser = null;
-    let enseignants = [];
-    let secretaires = [];
+    <script>
+        const API_BASE = '/api/admin';
+        let currentUser = null;
+        let enseignants = [];
+        let secretaires = [];
 
-    // ==================== AUTH & INIT ====================
+        // ==================== AUTH & INIT ====================
 
-    function checkAuth() {
-        const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+        function checkAuth() {
+            const user = localStorage.getItem('user') || sessionStorage.getItem('user');
 
-        if (!user) {
-            window.location.href = '/login';
-            return false;
-        }
-
-        try {
-            currentUser = JSON.parse(user);
-        } catch (e) {
-            console.error('Erreur parsing user:', e);
-            window.location.href = '/login';
-            return false;
-        }
-
-        if (currentUser.role !== 'ADMIN') {
-            showToast('Accès non autorisé', 'error');
-            setTimeout(() => window.location.href = '/login', 1500);
-            return false;
-        }
-
-        document.getElementById('userInitial').textContent = currentUser.email.charAt(0).toUpperCase();
-        document.getElementById('userEmailBadge').textContent = currentUser.email;
-        document.getElementById('userBadge').classList.remove('hidden');
-        return true;
-    }
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        Auth.logout('Vous avez été déconnecté.');
-    });
-
-    // ==================== API CALLS ====================
-
-    async function fetchApi(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+            if (!user) {
+                window.location.href = '/login';
+                return false;
             }
-        };
 
-        const response = await fetch(`${API_BASE}${endpoint}`, { ...defaultOptions, ...options });
-        return response.json();
-    }
-
-    async function loadStats() {
-        try {
-            const data = await fetchApi('/stats');
-            if (data.ok) {
-                document.getElementById('statUtilisateurs').textContent = data.stats.total_utilisateurs || '0';
-                document.getElementById('statEtudiants').textContent = data.stats.total_etudiants || '0';
-                document.getElementById('statEntreprises').textContent = data.stats.total_entreprises || '0';
-                document.getElementById('statOffres').textContent = data.stats.total_offres_actives || '0';
-                document.getElementById('statGroupes').textContent = data.stats.total_groupes || '0';
-                document.getElementById('statAffectations').textContent = data.stats.total_affectations || '0';
+            try {
+                currentUser = JSON.parse(user);
+            } catch (e) {
+                console.error('Erreur parsing user:', e);
+                window.location.href = '/login';
+                return false;
             }
-        } catch (e) {
-            console.error('Erreur chargement stats:', e);
-        }
-    }
 
-    async function loadEnseignants() {
-        try {
-            const data = await fetchApi('/enseignants');
-            if (data.ok) {
-                enseignants = data.enseignants;
-                const select = document.getElementById('enseignantSelect');
-                select.innerHTML = '<option value="">Sélectionner un enseignant</option>';
-                enseignants.forEach(e => {
-                    select.innerHTML += `<option value="${e.enseignant_id}">${e.nom || e.email}</option>`;
-                });
-                // Afficher la liste des enseignants
-                displayEnseignantsList();
+            if (currentUser.role !== 'ADMIN') {
+                showToast('Accès non autorisé', 'error');
+                setTimeout(() => window.location.href = '/login', 1500);
+                return false;
             }
-        } catch (e) {
-            console.error('Erreur chargement enseignants:', e);
-        }
-    }
 
-    async function loadSecretaires() {
-        try {
-            const data = await fetchApi('/secretaires');
-            if (data.ok) {
-                secretaires = data.secretaires;
-                const select = document.getElementById('secretaireSelect');
-                select.innerHTML = '<option value="">Sélectionner une secrétaire</option>';
-                secretaires.forEach(s => {
-                    const enConge = s.en_conge ? ' (en congé)' : '';
-                    select.innerHTML += `<option value="${s.secretaire_id}">${s.nom || s.email}${enConge}</option>`;
-                });
-                // Afficher la liste des secrétaires
-                displaySecretairesList();
+            document.getElementById('userInitial').textContent = currentUser.email.charAt(0).toUpperCase();
+            document.getElementById('userEmailBadge').textContent = currentUser.email;
+            document.getElementById('userBadge').classList.remove('hidden');
+            return true;
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            Auth.logout('Vous avez été déconnecté.');
+        });
+
+        // ==================== API CALLS ====================
+
+        async function fetchApi(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+
+            const response = await fetch(`${API_BASE}${endpoint}`, { ...defaultOptions, ...options });
+            return response.json();
+        }
+
+        async function loadStats() {
+            try {
+                const data = await fetchApi('/stats');
+                if (data.ok) {
+                    document.getElementById('statUtilisateurs').textContent = data.stats.total_utilisateurs || '0';
+                    document.getElementById('statEtudiants').textContent = data.stats.total_etudiants || '0';
+                    document.getElementById('statEntreprises').textContent = data.stats.total_entreprises || '0';
+                    document.getElementById('statOffres').textContent = data.stats.total_offres_actives || '0';
+                    document.getElementById('statGroupes').textContent = data.stats.total_groupes || '0';
+                    document.getElementById('statAffectations').textContent = data.stats.total_affectations || '0';
+                }
+            } catch (e) {
+                console.error('Erreur chargement stats:', e);
             }
-        } catch (e) {
-            console.error('Erreur chargement secrétaires:', e);
         }
-    }
 
-    function displayEnseignantsList() {
-        const container = document.getElementById('enseignantsList');
-        if (enseignants.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Aucun enseignant</p>';
-            return;
+        async function loadEnseignants() {
+            try {
+                const data = await fetchApi('/enseignants');
+                if (data.ok) {
+                    enseignants = data.enseignants;
+                    const select = document.getElementById('enseignantSelect');
+                    select.innerHTML = '<option value="">Sélectionner un enseignant</option>';
+                    enseignants.forEach(e => {
+                        select.innerHTML += `<option value="${e.enseignant_id}">${e.nom || e.email}</option>`;
+                    });
+                    // Afficher la liste des enseignants
+                    displayEnseignantsList();
+                }
+            } catch (e) {
+                console.error('Erreur chargement enseignants:', e);
+            }
         }
-        container.innerHTML = enseignants.map(e => `
+
+        async function loadSecretaires() {
+            try {
+                const data = await fetchApi('/secretaires');
+                if (data.ok) {
+                    secretaires = data.secretaires;
+                    const select = document.getElementById('secretaireSelect');
+                    select.innerHTML = '<option value="">Sélectionner une secrétaire</option>';
+                    secretaires.forEach(s => {
+                        const enConge = s.en_conge ? ' (en congé)' : '';
+                        select.innerHTML += `<option value="${s.secretaire_id}">${s.nom || s.email}${enConge}</option>`;
+                    });
+                    // Afficher la liste des secrétaires
+                    displaySecretairesList();
+                }
+            } catch (e) {
+                console.error('Erreur chargement secrétaires:', e);
+            }
+        }
+
+        function displayEnseignantsList() {
+            const container = document.getElementById('enseignantsList');
+            if (enseignants.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Aucun enseignant</p>';
+                return;
+            }
+            container.innerHTML = enseignants.map(e => `
             <div class="flex items-center p-2 bg-purple-50 rounded-lg">
                 <div class="w-8 h-8 bg-purple-200 rounded-full flex items-center justify-center mr-3">
                     <span class="text-purple-700 font-medium text-sm">${(e.nom || e.email).charAt(0).toUpperCase()}</span>
@@ -532,15 +614,15 @@
                 </div>
             </div>
         `).join('');
-    }
-
-    function displaySecretairesList() {
-        const container = document.getElementById('secretairesList');
-        if (secretaires.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Aucune secrétaire</p>';
-            return;
         }
-        container.innerHTML = secretaires.map(s => `
+
+        function displaySecretairesList() {
+            const container = document.getElementById('secretairesList');
+            if (secretaires.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Aucune secrétaire</p>';
+                return;
+            }
+            container.innerHTML = secretaires.map(s => `
             <div class="flex items-center p-2 bg-teal-50 rounded-lg">
                 <div class="w-8 h-8 bg-teal-200 rounded-full flex items-center justify-center mr-3">
                     <span class="text-teal-700 font-medium text-sm">${(s.nom || s.email).charAt(0).toUpperCase()}</span>
@@ -551,32 +633,32 @@
                 </div>
             </div>
         `).join('');
-    }
+        }
 
-    async function loadGroupes() {
-        const loading = document.getElementById('loadingGroupes');
-        const empty = document.getElementById('emptyGroupes');
-        const container = document.getElementById('groupesContainer');
-        const tbody = document.getElementById('groupesTableBody');
+        async function loadGroupes() {
+            const loading = document.getElementById('loadingGroupes');
+            const empty = document.getElementById('emptyGroupes');
+            const container = document.getElementById('groupesContainer');
+            const tbody = document.getElementById('groupesTableBody');
 
-        loading.classList.remove('hidden');
-        empty.classList.add('hidden');
-        container.classList.add('hidden');
+            loading.classList.remove('hidden');
+            empty.classList.add('hidden');
+            container.classList.add('hidden');
 
-        try {
-            const data = await fetchApi('/groupes');
-            loading.classList.add('hidden');
+            try {
+                const data = await fetchApi('/groupes');
+                loading.classList.add('hidden');
 
-            if (!data.ok || data.groupes.length === 0) {
-                empty.classList.remove('hidden');
-                return;
-            }
+                if (!data.ok || data.groupes.length === 0) {
+                    empty.classList.remove('hidden');
+                    return;
+                }
 
-            container.classList.remove('hidden');
-            tbody.innerHTML = '';
+                container.classList.remove('hidden');
+                tbody.innerHTML = '';
 
-            data.groupes.forEach(groupe => {
-                tbody.innerHTML += `
+                data.groupes.forEach(groupe => {
+                    tbody.innerHTML += `
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="py-3 px-4">
                             <span class="font-medium text-gray-900">${escapeHtml(groupe.nom_groupe)}</span>
@@ -623,322 +705,416 @@
                         </td>
                     </tr>
                 `;
+                });
+            } catch (e) {
+                console.error('Erreur chargement groupes:', e);
+                loading.classList.add('hidden');
+                showToast('Erreur lors du chargement des groupes', 'error');
+            }
+        }
+
+        // ==================== CLÔTURE ANNUELLE ====================
+
+        let anneeEnCours = null; // Stocke l'année saisie validée
+
+        function openClotureModal() {
+            // Réinitialisation
+            document.getElementById('clotureConfirmInput').value = '';
+            document.getElementById('clotureInputFeedback').textContent = '';
+            document.getElementById('clotureError').classList.add('hidden');
+            document.getElementById('btnConfirmCloture').disabled = true;
+            anneeEnCours = null;
+
+            // Suggestion de l'année actuelle
+            const anneeActuelle = new Date().getFullYear();
+            const anneeSuivante = anneeActuelle + 1;
+            const suggestion = `${anneeActuelle}-${anneeSuivante}`;
+            document.getElementById('expectedFormat').textContent = suggestion;
+
+            // Afficher la modale
+            document.getElementById('clotureModal').classList.remove('hidden');
+
+            // Focus sur l'input
+            setTimeout(() => {
+                document.getElementById('clotureConfirmInput').focus();
+            }, 100);
+
+            // Écouter les changements en temps réel
+            const input = document.getElementById('clotureConfirmInput');
+            input.addEventListener('input', validateClotureInput);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !document.getElementById('btnConfirmCloture').disabled) {
+                    confirmerCloture();
+                }
             });
-        } catch (e) {
-            console.error('Erreur chargement groupes:', e);
-            loading.classList.add('hidden');
-            showToast('Erreur lors du chargement des groupes', 'error');
-        }
-    }
-
-    // ==================== ARCHIVAGE ====================
-
-    async function lancerArchivage() {
-        if (!confirm('Êtes-vous sûr de vouloir lancer l\'archivage annuel ?\nCette action est irréversible.')) {
-            return;
         }
 
-        const btn = document.getElementById('btnArchivage');
-        const resultDiv = document.getElementById('archivageResult');
+        function closeClotureModal() {
+            document.getElementById('clotureModal').classList.add('hidden');
+            anneeEnCours = null;
+        }
 
-        btn.disabled = true;
-        btn.innerHTML = `
-            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+        function validateClotureInput() {
+            const input = document.getElementById('clotureConfirmInput');
+            const feedback = document.getElementById('clotureInputFeedback');
+            const btnConfirm = document.getElementById('btnConfirmCloture');
+            const value = input.value.trim();
+
+            // Validation du format YYYY-YYYY
+            const anneeRegex = /^\d{4}-\d{4}$/;
+
+            if (!value) {
+                feedback.textContent = '';
+                feedback.className = 'text-sm text-gray-500 h-5';
+                btnConfirm.disabled = true;
+                anneeEnCours = null;
+                return;
+            }
+
+            if (!anneeRegex.test(value)) {
+                feedback.textContent = '❌ Format invalide (attendu : YYYY-YYYY)';
+                feedback.className = 'text-sm text-red-600 h-5 font-medium';
+                btnConfirm.disabled = true;
+                anneeEnCours = null;
+                return;
+            }
+
+            // Validation de cohérence
+            const [debut, fin] = value.split('-').map(Number);
+            if (fin !== debut + 1) {
+                feedback.textContent = '❌ L\'année de fin doit être l\'année de début + 1';
+                feedback.className = 'text-sm text-red-600 h-5 font-medium';
+                btnConfirm.disabled = true;
+                anneeEnCours = null;
+                return;
+            }
+
+            // Validation réussie
+            feedback.textContent = '✅ Format valide';
+            feedback.className = 'text-sm text-green-600 h-5 font-medium';
+            btnConfirm.disabled = false;
+            anneeEnCours = value;
+        }
+
+        async function confirmerCloture() {
+            if (!anneeEnCours) {
+                return;
+            }
+
+            const btnConfirm = document.getElementById('btnConfirmCloture');
+            const btnCancel = document.getElementById('btnCancelCloture');
+            const errorDiv = document.getElementById('clotureError');
+            const input = document.getElementById('clotureConfirmInput');
+
+            // Désactiver toute l'interface
+            btnConfirm.disabled = true;
+            btnCancel.disabled = true;
+            input.disabled = true;
+            errorDiv.classList.add('hidden');
+
+            // Afficher le spinner
+            const originalText = btnConfirm.innerHTML;
+            btnConfirm.innerHTML = `
+            <svg class="w-5 h-5 animate-spin inline mr-2" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>Archivage en cours...</span>
+            Clôture en cours...
         `;
 
-        try {
-            const data = await fetchApi('/archivage', {
-                method: 'POST',
-                body: JSON.stringify({ userId: currentUser.id })
-            });
+            try {
+                console.log(`[CLÔTURE] Lancement pour l'année ${anneeEnCours}`);
 
-            resultDiv.classList.remove('hidden');
+                const response = await fetch('/api/admin/cloture-annee', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        anneeUniversitaire: anneeEnCours
+                    })
+                });
 
-            if (data.ok) {
-                resultDiv.className = 'mt-4 p-4 rounded-lg bg-green-50 border border-green-200';
-                resultDiv.innerHTML = `
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <div class="text-sm text-green-800">
-                            <p class="font-medium">Archivage terminé avec succès !</p>
-                            <ul class="mt-2 space-y-1">
-                                <li>• ${data.details.offres_archivees} offre(s) archivée(s)</li>
-                                <li>• ${data.details.candidatures_archivees} candidature(s) archivée(s)</li>
-                                <li>• ${data.details.attestations_archivees} attestation(s) archivée(s)</li>
-                                <li>• ${data.details.utilisateurs_desactives} compte(s) désactivé(s)</li>
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                loadStats(); // Rafraîchir les stats
-            } else {
-                resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-50 border border-red-200';
-                resultDiv.innerHTML = `
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        <div class="text-sm text-red-800">
-                            <p class="font-medium">Erreur lors de l'archivage</p>
-                            <p>${data.error || 'Une erreur est survenue'}</p>
-                        </div>
-                    </div>
-                `;
+                const data = await response.json();
+
+                if (data.ok) {
+                    console.log('[CLÔTURE] Succès:', data);
+
+                    // Succès : Afficher un message et recharger
+                    showToast(`✅ Année ${anneeEnCours} clôturée avec succès !`, 'success');
+
+                    // Fermer la modale
+                    closeClotureModal();
+
+                    // Recharger les stats après 1 seconde
+                    setTimeout(() => {
+                        loadStats();
+                        loadGroupes();
+                    }, 1000);
+
+                } else {
+                    // Erreur métier
+                    console.error('[CLÔTURE] Erreur:', data);
+                    errorDiv.textContent = data.error || 'Erreur lors de la clôture';
+                    if (data.details) {
+                        errorDiv.textContent += ` (${data.details})`;
+                    }
+                    errorDiv.classList.remove('hidden');
+
+                    // Réactiver l'interface
+                    btnConfirm.innerHTML = originalText;
+                    btnConfirm.disabled = false;
+                    btnCancel.disabled = false;
+                    input.disabled = false;
+                }
+
+            } catch (error) {
+                console.error('[CLÔTURE] Erreur réseau:', error);
+                errorDiv.textContent = 'Erreur réseau. Vérifiez votre connexion et réessayez.';
+                errorDiv.classList.remove('hidden');
+
+                // Réactiver l'interface
+                btnConfirm.innerHTML = originalText;
+                btnConfirm.disabled = false;
+                btnCancel.disabled = false;
+                input.disabled = false;
             }
-        } catch (e) {
-            console.error('Erreur archivage:', e);
-            showToast('Erreur lors de l\'archivage', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                </svg>
-                <span>Lancer l'archivage</span>
-            `;
-        }
-    }
-
-    // ==================== MODALS ====================
-
-    function openCreateGroupeModal() {
-        document.getElementById('modalTitle').textContent = 'Nouveau groupe';
-        document.getElementById('groupeId').value = '';
-        document.getElementById('groupeForm').reset();
-        document.getElementById('formError').classList.add('hidden');
-        document.getElementById('groupeModal').classList.remove('hidden');
-    }
-
-    function editGroupe(id, nom, annee, enseignantId, secretaireId) {
-        document.getElementById('modalTitle').textContent = 'Modifier le groupe';
-        document.getElementById('groupeId').value = id;
-        document.getElementById('nomGroupe').value = nom;
-        document.getElementById('anneeScolaire').value = annee;
-        document.getElementById('enseignantSelect').value = enseignantId;
-        document.getElementById('secretaireSelect').value = secretaireId;
-        document.getElementById('formError').classList.add('hidden');
-        document.getElementById('groupeModal').classList.remove('hidden');
-    }
-
-    function closeGroupeModal() {
-        document.getElementById('groupeModal').classList.add('hidden');
-    }
-
-    async function submitGroupeForm() {
-        const id = document.getElementById('groupeId').value;
-        const payload = {
-            nom_groupe: document.getElementById('nomGroupe').value,
-            annee_scolaire: document.getElementById('anneeScolaire').value,
-            enseignant_id: document.getElementById('enseignantSelect').value,
-            secretaire_id: document.getElementById('secretaireSelect').value
-        };
-
-        if (!payload.nom_groupe || !payload.annee_scolaire || !payload.enseignant_id || !payload.secretaire_id) {
-            document.getElementById('formError').textContent = 'Tous les champs sont obligatoires';
-            document.getElementById('formError').classList.remove('hidden');
-            return;
         }
 
-        try {
-            const endpoint = id ? `/groupes/${id}` : '/groupes';
-            const method = id ? 'PUT' : 'POST';
+        // ==================== MODALS ====================
 
-            const data = await fetchApi(endpoint, {
-                method,
-                body: JSON.stringify(payload)
-            });
+        function openCreateGroupeModal() {
+            document.getElementById('modalTitle').textContent = 'Nouveau groupe';
+            document.getElementById('groupeId').value = '';
+            document.getElementById('groupeForm').reset();
+            document.getElementById('formError').classList.add('hidden');
+            document.getElementById('groupeModal').classList.remove('hidden');
+        }
 
-            if (data.ok) {
-                closeGroupeModal();
-                showToast(id ? 'Groupe mis à jour' : 'Groupe créé avec succès', 'success');
-                loadGroupes();
-                loadStats();
-            } else {
-                document.getElementById('formError').textContent = data.error || 'Erreur lors de l\'enregistrement';
+        function editGroupe(id, nom, annee, enseignantId, secretaireId) {
+            document.getElementById('modalTitle').textContent = 'Modifier le groupe';
+            document.getElementById('groupeId').value = id;
+            document.getElementById('nomGroupe').value = nom;
+            document.getElementById('anneeScolaire').value = annee;
+            document.getElementById('enseignantSelect').value = enseignantId;
+            document.getElementById('secretaireSelect').value = secretaireId;
+            document.getElementById('formError').classList.add('hidden');
+            document.getElementById('groupeModal').classList.remove('hidden');
+        }
+
+        function closeGroupeModal() {
+            document.getElementById('groupeModal').classList.add('hidden');
+        }
+
+        async function submitGroupeForm() {
+            const id = document.getElementById('groupeId').value;
+            const payload = {
+                nom_groupe: document.getElementById('nomGroupe').value,
+                annee_scolaire: document.getElementById('anneeScolaire').value,
+                enseignant_id: document.getElementById('enseignantSelect').value,
+                secretaire_id: document.getElementById('secretaireSelect').value
+            };
+
+            if (!payload.nom_groupe || !payload.annee_scolaire || !payload.enseignant_id || !payload.secretaire_id) {
+                document.getElementById('formError').textContent = 'Tous les champs sont obligatoires';
                 document.getElementById('formError').classList.remove('hidden');
+                return;
             }
-        } catch (e) {
-            console.error('Erreur soumission:', e);
-            showToast('Erreur lors de l\'enregistrement', 'error');
-        }
-    }
 
-    async function deleteGroupe(id, nom) {
-        if (!confirm(`Êtes-vous sûr de vouloir supprimer le groupe "${nom}" ?`)) {
-            return;
-        }
+            try {
+                const endpoint = id ? `/groupes/${id}` : '/groupes';
+                const method = id ? 'PUT' : 'POST';
 
-        try {
-            const data = await fetchApi(`/groupes/${id}`, { method: 'DELETE' });
+                const data = await fetchApi(endpoint, {
+                    method,
+                    body: JSON.stringify(payload)
+                });
 
-            if (data.ok) {
-                showToast('Groupe supprimé', 'success');
-                loadGroupes();
-                loadStats();
-            } else {
-                showToast(data.error || 'Erreur lors de la suppression', 'error');
+                if (data.ok) {
+                    closeGroupeModal();
+                    showToast(id ? 'Groupe mis à jour' : 'Groupe créé avec succès', 'success');
+                    loadGroupes();
+                    loadStats();
+                } else {
+                    document.getElementById('formError').textContent = data.error || 'Erreur lors de l\'enregistrement';
+                    document.getElementById('formError').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error('Erreur soumission:', e);
+                showToast('Erreur lors de l\'enregistrement', 'error');
             }
-        } catch (e) {
-            console.error('Erreur suppression:', e);
-            showToast('Erreur lors de la suppression', 'error');
-        }
-    }
-
-    // ==================== UTILS ====================
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function showToast(message, type = 'info') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all ${
-            type === 'success' ? 'bg-green-600 text-white' :
-            type === 'error' ? 'bg-red-600 text-white' :
-            'bg-gray-800 text-white'
-        }`;
-        toast.classList.remove('hidden');
-        setTimeout(() => toast.classList.add('hidden'), 3000);
-    }
-
-    // ==================== INIT ====================
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        if (!checkAuth()) return;
-
-        await Promise.all([
-            loadStats(),
-            loadEnseignants(),
-            loadSecretaires()
-        ]);
-        loadGroupes();
-    });
-
-    // Fermer modal avec Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeGroupeModal();
-            closeEnseignantModal();
-            closeSecretaireModal();
-        }
-    });
-
-    // ==================== MODALS ENSEIGNANT ====================
-
-    function openCreateEnseignantModal() {
-        document.getElementById('enseignantForm').reset();
-        document.getElementById('enseignantFormError').classList.add('hidden');
-        document.getElementById('enseignantModal').classList.remove('hidden');
-    }
-
-    function closeEnseignantModal() {
-        document.getElementById('enseignantModal').classList.add('hidden');
-    }
-
-    async function submitEnseignantForm() {
-        const payload = {
-            nom: document.getElementById('enseignantNom').value,
-            email: document.getElementById('enseignantEmail').value,
-            password: document.getElementById('enseignantPassword').value
-        };
-
-        if (!payload.email || !payload.password) {
-            document.getElementById('enseignantFormError').textContent = 'Email et mot de passe sont obligatoires';
-            document.getElementById('enseignantFormError').classList.remove('hidden');
-            return;
         }
 
-        if (payload.password.length < 6) {
-            document.getElementById('enseignantFormError').textContent = 'Le mot de passe doit contenir au moins 6 caractères';
-            document.getElementById('enseignantFormError').classList.remove('hidden');
-            return;
+        async function deleteGroupe(id, nom) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer le groupe "${nom}" ?`)) {
+                return;
+            }
+
+            try {
+                const data = await fetchApi(`/groupes/${id}`, { method: 'DELETE' });
+
+                if (data.ok) {
+                    showToast('Groupe supprimé', 'success');
+                    loadGroupes();
+                    loadStats();
+                } else {
+                    showToast(data.error || 'Erreur lors de la suppression', 'error');
+                }
+            } catch (e) {
+                console.error('Erreur suppression:', e);
+                showToast('Erreur lors de la suppression', 'error');
+            }
         }
 
-        try {
-            const data = await fetchApi('/enseignants', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
+        // ==================== UTILS ====================
 
-            if (data.ok) {
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all ${type === 'success' ? 'bg-green-600 text-white' :
+                type === 'error' ? 'bg-red-600 text-white' :
+                    'bg-gray-800 text-white'
+                }`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // ==================== INIT ====================
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!checkAuth()) return;
+
+            await Promise.all([
+                loadStats(),
+                loadEnseignants(),
+                loadSecretaires()
+            ]);
+            loadGroupes();
+        });
+
+        // Fermer modal avec Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeGroupeModal();
                 closeEnseignantModal();
-                showToast('Enseignant créé avec succès', 'success');
-                loadEnseignants();
-                loadStats();
-            } else {
-                document.getElementById('enseignantFormError').textContent = data.error || 'Erreur lors de la création';
-                document.getElementById('enseignantFormError').classList.remove('hidden');
-            }
-        } catch (e) {
-            console.error('Erreur création enseignant:', e);
-            showToast('Erreur lors de la création', 'error');
-        }
-    }
-
-    // ==================== MODALS SECRÉTAIRE ====================
-
-    function openCreateSecretaireModal() {
-        document.getElementById('secretaireForm').reset();
-        document.getElementById('secretaireFormError').classList.add('hidden');
-        document.getElementById('secretaireModal').classList.remove('hidden');
-    }
-
-    function closeSecretaireModal() {
-        document.getElementById('secretaireModal').classList.add('hidden');
-    }
-
-    async function submitSecretaireForm() {
-        const payload = {
-            nom: document.getElementById('secretaireNom').value,
-            email: document.getElementById('secretaireEmail').value,
-            password: document.getElementById('secretairePassword').value
-        };
-
-        if (!payload.email || !payload.password) {
-            document.getElementById('secretaireFormError').textContent = 'Email et mot de passe sont obligatoires';
-            document.getElementById('secretaireFormError').classList.remove('hidden');
-            return;
-        }
-
-        if (payload.password.length < 6) {
-            document.getElementById('secretaireFormError').textContent = 'Le mot de passe doit contenir au moins 6 caractères';
-            document.getElementById('secretaireFormError').classList.remove('hidden');
-            return;
-        }
-
-        try {
-            const data = await fetchApi('/secretaires', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-
-            if (data.ok) {
                 closeSecretaireModal();
-                showToast('Secrétaire créé(e) avec succès', 'success');
-                loadSecretaires();
-                loadStats();
-            } else {
-                document.getElementById('secretaireFormError').textContent = data.error || 'Erreur lors de la création';
-                document.getElementById('secretaireFormError').classList.remove('hidden');
             }
-        } catch (e) {
-            console.error('Erreur création secrétaire:', e);
-            showToast('Erreur lors de la création', 'error');
+        });
+
+        // ==================== MODALS ENSEIGNANT ====================
+
+        function openCreateEnseignantModal() {
+            document.getElementById('enseignantForm').reset();
+            document.getElementById('enseignantFormError').classList.add('hidden');
+            document.getElementById('enseignantModal').classList.remove('hidden');
         }
-    }
-</script>
-<script src="/js/auth.js"></script>
+
+        function closeEnseignantModal() {
+            document.getElementById('enseignantModal').classList.add('hidden');
+        }
+
+        async function submitEnseignantForm() {
+            const payload = {
+                nom: document.getElementById('enseignantNom').value,
+                email: document.getElementById('enseignantEmail').value,
+                password: document.getElementById('enseignantPassword').value
+            };
+
+            if (!payload.email || !payload.password) {
+                document.getElementById('enseignantFormError').textContent = 'Email et mot de passe sont obligatoires';
+                document.getElementById('enseignantFormError').classList.remove('hidden');
+                return;
+            }
+
+            if (payload.password.length < 6) {
+                document.getElementById('enseignantFormError').textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+                document.getElementById('enseignantFormError').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const data = await fetchApi('/enseignants', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                if (data.ok) {
+                    closeEnseignantModal();
+                    showToast('Enseignant créé avec succès', 'success');
+                    loadEnseignants();
+                    loadStats();
+                } else {
+                    document.getElementById('enseignantFormError').textContent = data.error || 'Erreur lors de la création';
+                    document.getElementById('enseignantFormError').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error('Erreur création enseignant:', e);
+                showToast('Erreur lors de la création', 'error');
+            }
+        }
+
+        // ==================== MODALS SECRÉTAIRE ====================
+
+        function openCreateSecretaireModal() {
+            document.getElementById('secretaireForm').reset();
+            document.getElementById('secretaireFormError').classList.add('hidden');
+            document.getElementById('secretaireModal').classList.remove('hidden');
+        }
+
+        function closeSecretaireModal() {
+            document.getElementById('secretaireModal').classList.add('hidden');
+        }
+
+        async function submitSecretaireForm() {
+            const payload = {
+                nom: document.getElementById('secretaireNom').value,
+                email: document.getElementById('secretaireEmail').value,
+                password: document.getElementById('secretairePassword').value
+            };
+
+            if (!payload.email || !payload.password) {
+                document.getElementById('secretaireFormError').textContent = 'Email et mot de passe sont obligatoires';
+                document.getElementById('secretaireFormError').classList.remove('hidden');
+                return;
+            }
+
+            if (payload.password.length < 6) {
+                document.getElementById('secretaireFormError').textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+                document.getElementById('secretaireFormError').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const data = await fetchApi('/secretaires', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                if (data.ok) {
+                    closeSecretaireModal();
+                    showToast('Secrétaire créé(e) avec succès', 'success');
+                    loadSecretaires();
+                    loadStats();
+                } else {
+                    document.getElementById('secretaireFormError').textContent = data.error || 'Erreur lors de la création';
+                    document.getElementById('secretaireFormError').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error('Erreur création secrétaire:', e);
+                showToast('Erreur lors de la création', 'error');
+            }
+        }
+    </script>
+    <script src="/js/auth.js"></script>
 
 </body>
+
 </html>

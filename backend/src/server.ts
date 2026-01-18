@@ -12,6 +12,7 @@ import entrepriseRoutes from './routes/entreprise';
 import etudiantRoutes from './routes/etudiant';
 import notificationRoutes from './routes/notifications';
 import affectationRoutes from './routes/affectation';
+import adminRoutes from './routes/admin';
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -30,6 +31,7 @@ app.use('/api/entreprise', entrepriseRoutes);
 app.use('/api/etudiant', etudiantRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/affectations', affectationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // --- ROUTES FRONTEND ---
 
@@ -77,6 +79,11 @@ app.get('/enseignant/affectations-en-attente', (_req, res) => {
 
 app.get('/enseignant/archives', (_req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'archives.html'));
+});
+
+// Routes Admin
+app.get('/admin/dashboard', (_req, res) => {
+    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'dashboard-admin.html'));
 });
 
 // Routes Secrétaire

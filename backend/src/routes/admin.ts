@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-    lancerArchivageAnnuel,
+    lancerClotureAnnuelle,
     getGroupes,
     getEnseignants,
     getSecretaires,
@@ -17,8 +17,8 @@ const router = Router();
 // Statistiques admin
 router.get('/stats', getAdminStats);
 
-// Archivage annuel
-router.post('/archivage', lancerArchivageAnnuel);
+// Clôture annuelle (opération destructrice)
+router.post('/cloture-annee', lancerClotureAnnuelle);
 
 // Gestion des groupes
 router.get('/groupes', getGroupes);

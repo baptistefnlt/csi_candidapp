@@ -486,22 +486,9 @@
                 // Succès !
                 showToast('Candidature validée avec succès ! Le stage est créé.', 'success');
 
-                // Mise à jour du compteur
-                const countEl = document.getElementById('pendingCount');
-                const currentCount = parseInt(countEl.textContent) || 0;
-                countEl.textContent = Math.max(0, currentCount - 1);
-
-                // Animation de suppression de la carte
-                card.classList.add('fade-out');
-                setTimeout(() => {
-                    card.remove();
-
-                    // Vérifier s'il reste des candidatures
-                    const grid = document.getElementById('candidaturesGrid');
-                    if (grid.children.length === 0) {
-                        showState('emptyState');
-                    }
-                }, 500);
+                // Recharger la liste complète pour refléter les changements du trigger
+                // (les candidatures concurrentes ont été automatiquement refusées par la BDD)
+                await loadPendingCandidatures();
 
             } catch (error) {
                 console.error('Erreur:', error);
@@ -565,22 +552,8 @@
                 // Succès !
                 showToast('Candidature refusée', 'success');
 
-                // Mise à jour du compteur
-                const countEl = document.getElementById('pendingCount');
-                const currentCount = parseInt(countEl.textContent) || 0;
-                countEl.textContent = Math.max(0, currentCount - 1);
-
-                // Animation de suppression de la carte
-                card.classList.add('fade-out');
-                setTimeout(() => {
-                    card.remove();
-
-                    // Vérifier s'il reste des candidatures
-                    const grid = document.getElementById('candidaturesGrid');
-                    if (grid.children.length === 0) {
-                        showState('emptyState');
-                    }
-                }, 500);
+                // Recharger la liste complète
+                await loadPendingCandidatures();
 
             } catch (error) {
                 console.error('Erreur:', error);

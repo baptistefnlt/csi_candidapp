@@ -1,24 +1,60 @@
 import { Request, Response } from 'express';
 import { query } from '../config/db';
 
-// ==================== ARCHIVAGE ANNUEL ====================
+// ==================== CLÔTURE ANNUELLE ====================
 
 /**
- * POST /api/admin/archivage
- * Lance l'archivage annuel (non implémenté pour le moment)
+ * POST /api/admin/cloture-annee
+ * Lance la clôture annuelle via procédure stockée
+ * Body: { anneeUniversitaire: "YYYY-YYYY" }
  */
-export const lancerArchivageAnnuel = async (_req: Request, res: Response) => {
-    // TODO: Implémenter l'archivage annuel via v_action_archivage_annuel
-    return res.status(200).json({
-        ok: true,
-        message: 'Fonctionnalité d\'archivage non implémentée pour le moment',
-        details: {
-            offres_archivees: 0,
-            candidatures_archivees: 0,
-            attestations_archivees: 0,
-            utilisateurs_desactives: 0
+export const lancerClotureAnnuelle = async (req: Request, res: Response) => {
+    try {
+        const { anneeUniversitaire } = req.body;
+
+        // Validation stricte du format YYYY-YYYY
+        const anneeRegex = /^\d{4}-\d{4}$/;
+        if (!anneeUniversitaire || !anneeRegex.test(anneeUniversitaire)) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Format d\'année invalide. Format attendu : YYYY-YYYY (ex: 2024-2025)'
+            });
         }
-    });
+
+        // Validation de cohérence (année de fin = année de début + 1)
+        const [debut, fin] = anneeUniversitaire.split('-').map(Number);
+        if (fin !== debut + 1) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Année universitaire incohérente. L\'année de fin doit être l\'année de début + 1'
+            });
+        }
+
+        console.log(`[CLÔTURE ANNUELLE] Démarrage pour l'année ${anneeUniversitaire}`);
+
+        // Appel de la procédure stockée (transaction ACID gérée par la BDD)
+        await query('CALL public.proc_cloture_annee($1)', [anneeUniversitaire]);
+
+        console.log(`[CLÔTURE ANNUELLE] Opération réussie pour ${anneeUniversitaire}`);
+
+        return res.status(200).json({
+            ok: true,
+            message: `Année universitaire ${anneeUniversitaire} clôturée avec succès`,
+            annee: anneeUniversitaire
+        });
+
+    } catch (error: any) {
+        console.error('[CLÔTURE ANNUELLE] Erreur:', error);
+
+        // Message d'erreur détaillé pour le debug
+        const errorMessage = error.message || 'Erreur lors de la clôture annuelle';
+
+        return res.status(500).json({
+            ok: false,
+            error: 'Échec de la clôture annuelle. La transaction a été annulée.',
+            details: errorMessage
+        });
+    }
 };
 
 // ==================== GESTION DES GROUPES ====================
