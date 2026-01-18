@@ -370,7 +370,8 @@
                     const statutBadge = getStatutBadge(candidature.statut_candidature);
                     const offreInvalide = candidature.statut_candidature === 'EN_ATTENTE' &&
                         isOffreInvalide(candidature.statut_actuel_offre);
-                    const peutAnnuler = candidature.statut_candidature === 'EN_ATTENTE' || candidature.statut_candidature === 'RETENU';
+                    const peutAnnuler = candidature.statut_candidature === 'EN_ATTENTE';
+                    const peutRenoncer = candidature.statut_candidature === 'ACCEPTE';
 
                     const candidatureCard = document.createElement('div');
                     candidatureCard.className = 'bg-white rounded-2xl shadow-lg p-6 card-hover';
@@ -435,6 +436,18 @@
                   </button>
                 </div>
               ` : ''}
+              ${peutRenoncer ? `
+                <div class="flex-shrink-0">
+                  <button 
+                    class="btn-renoncer flex items-center space-x-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition shadow-md"
+                    onclick="renoncerStage(${candidature.candidature_id || candidature.id}, '${candidature.offre_titre}', this.closest('.bg-white'))">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Renoncer au stage</span>
+                  </button>
+                </div>
+              ` : ''}
             </div>
           `;
 
@@ -453,6 +466,126 @@
         // Charger les candidatures au chargement de la page
         loadCandidatures();
         initAuth();
+
+        // ===== RENONCEMENT AU STAGE =====
+
+        async function renoncerStage(candidatureId, titreStage, cardElement) {
+            // Confirmation sérieuse
+            const confirmation = confirm(
+                "⚠️ ATTENTION : Vous êtes sur le point d'annuler votre stage validé.\n\n" +
+                `Stage : ${titreStage}\n\n` +
+                "Cette action est IRRÉVERSIBLE.\n\n" +
+                "Voulez-vous continuer ?"
+            );
+
+            if (!confirmation) return;
+
+            // Demander la justification
+            const justification = prompt(
+                "Veuillez saisir OBLIGATOIREMENT le motif de votre renoncement :\n\n" +
+                "Exemples : raisons personnelles, offre non conforme, changement de situation, etc."
+            );
+
+            // Vérifier que la justification n'est pas vide
+            if (!justification || justification.trim().length === 0) {
+                alert('La justification est obligatoire. Renoncement annulé.');
+                return;
+            }
+
+            const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+            if (!user) {
+                alert('Erreur : Utilisateur non connecté');
+                return;
+            }
+
+            const btnRenoncer = cardElement.querySelector('.btn-renoncer');
+            const originalBtnContent = btnRenoncer.innerHTML;
+
+            // Désactiver le bouton et afficher le chargement
+            btnRenoncer.disabled = true;
+            btnRenoncer.classList.add('opacity-50', 'cursor-not-allowed');
+            btnRenoncer.innerHTML = `
+                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Traitement...</span>
+            `;
+
+            console.log('[RENONCEMENT] Début de la requête');
+            console.log('[RENONCEMENT] Candidature ID reçu:', candidatureId);
+            console.log('[RENONCEMENT] Type de candidatureId:', typeof candidatureId);
+            console.log('[RENONCEMENT] URL:', '/api/etudiant/renounce');
+
+            try {
+                const res = await fetch('/api/etudiant/renounce', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        candidature_id: candidatureId,
+                        justification: justification.trim()
+                    })
+                });
+
+                console.log('[RENONCEMENT] Status HTTP:', res.status);
+                console.log('[RENONCEMENT] Status Text:', res.statusText);
+
+                // Vérifier si la réponse est du JSON
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('[RENONCEMENT] Réponse non-JSON reçue:', contentType);
+                    const textResponse = await res.text();
+                    console.error('[RENONCEMENT] Contenu de la réponse:', textResponse);
+                    throw new Error('Le serveur n\'a pas renvoyé du JSON. Vérifiez la console.');
+                }
+
+                const data = await res.json();
+                console.log('[RENONCEMENT] Réponse du serveur:', data);
+
+                if (res.ok && data.ok) {
+                    console.log('[RENONCEMENT] Succès !');
+                    showToast(data.message || 'Votre renoncement a été pris en compte.', 'success');
+
+                    // Mettre à jour visuellement la candidature
+                    const statutBadge = getStatutBadge('ANNULE');
+                    const badgeElement = cardElement.querySelector('.statut-badge');
+                    badgeElement.className = `statut-badge inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${statutBadge.class}`;
+                    badgeElement.innerHTML = `${statutBadge.icon}<span class="ml-1">${statutBadge.label}</span>`;
+
+                    // Supprimer le bouton
+                    btnRenoncer.remove();
+
+                } else {
+                    console.error('[RENONCEMENT] Erreur serveur:', data.error);
+                    showToast(data.error || 'Impossible de traiter votre renoncement', 'error');
+
+                    // Restaurer le bouton
+                    btnRenoncer.disabled = false;
+                    btnRenoncer.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btnRenoncer.innerHTML = originalBtnContent;
+                }
+            } catch (error) {
+                console.error('[RENONCEMENT] Exception attrapée:', error);
+                console.error('[RENONCEMENT] Type d\'erreur:', error.name);
+                console.error('[RENONCEMENT] Message:', error.message);
+
+                let errorMsg = 'Erreur technique';
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg = 'Impossible de joindre le serveur. Vérifiez que le backend tourne.';
+                } else if (error.message.includes('JSON')) {
+                    errorMsg = 'Réponse serveur invalide. Consultez la console (F12).';
+                } else {
+                    errorMsg = error.message;
+                }
+
+                showToast(errorMsg, 'error');
+
+                // Restaurer le bouton
+                btnRenoncer.disabled = false;
+                btnRenoncer.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnRenoncer.innerHTML = originalBtnContent;
+            }
+        }
     </script>
     <script src="/js/notifications.js"></script>
 </body>

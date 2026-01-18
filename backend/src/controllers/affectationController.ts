@@ -273,3 +273,74 @@ export async function renounce(req: Request, res: Response) {
         });
     }
 }
+
+/**
+ * Renoncer à une candidature validée - Action étudiant
+ * @route POST /api/etudiant/renounce
+ */
+export async function renounceByStudent(req: Request, res: Response) {
+    const { candidature_id, justification } = req.body;
+
+    // Validation du payload
+    if (!candidature_id || typeof candidature_id !== 'number') {
+        return res.status(400).json({
+            ok: false,
+            error: 'candidature_id est requis et doit être un nombre'
+        });
+    }
+
+    if (!justification || typeof justification !== 'string' || justification.trim().length === 0) {
+        return res.status(400).json({
+            ok: false,
+            error: 'justification est requise et ne peut pas être vide'
+        });
+    }
+
+    try {
+        // Fire & Forget - Pas de RETURNING (le trigger gère la logique)
+        // type_acteur forcé à 'ETUDIANT' car c'est l'étudiant qui appelle cette route
+        await query(
+            'INSERT INTO v_action_renoncer_candidature (candidature_id, type_acteur, justification) VALUES ($1, $2, $3)',
+            [candidature_id, 'ETUDIANT', justification]
+        );
+
+        // Si on arrive ici sans exception, le trigger a validé l'opération
+        return res.status(200).json({
+            ok: true,
+            message: 'Votre renoncement a été pris en compte. Le stage a été annulé.'
+        });
+
+    } catch (error: any) {
+        console.error('Erreur lors du renoncement étudiant:', error);
+
+        // Gestion des erreurs spécifiques du trigger
+        const errorMessage = error.message || '';
+
+        // Action impossible (stage pas encore validé, déjà annulé, etc.)
+        if (
+            errorMessage.includes('Action impossible') ||
+            errorMessage.includes('Action illégale') ||
+            errorMessage.includes('statut') ||
+            errorMessage.includes('introuvable')
+        ) {
+            return res.status(400).json({
+                ok: false,
+                error: errorMessage.replace(/^ERROR:\s*/, '') || 'Cette action n\'est pas possible pour cette candidature (stage non validé ou déjà annulé)'
+            });
+        }
+
+        // Erreur générique règle métier
+        if (error.code === 'P0001' || errorMessage.includes('RAISE')) {
+            return res.status(400).json({
+                ok: false,
+                error: errorMessage.replace(/^ERROR:\s*/, '') || 'Règle métier non respectée'
+            });
+        }
+
+        // Erreur serveur générique
+        return res.status(500).json({
+            ok: false,
+            error: 'Erreur interne lors du renoncement au stage'
+        });
+    }
+}
