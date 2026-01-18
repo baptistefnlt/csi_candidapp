@@ -80,6 +80,34 @@ export const getAttestationsAValider = async (req: Request, res: Response) => {
 };
 
 /**
+ * GET /api/dashboard/secretaire/attestations-expirees?userId=...
+ * ✅ SELECT uniquement via vue
+ */
+export const getAttestationsExpirees = async (req: Request, res: Response) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(400).json({ ok: false, error: 'userId manquant' });
+
+    const secretaireId = await getSecretaireIdFromUserId(userId);
+    if (!secretaireId) {
+      return res.status(403).json({ ok: false, error: 'Accès interdit (profil secrétaire introuvable)' });
+    }
+
+    const result = await query(`
+      SELECT *
+      FROM public.v_attestations_rc_expirees_secretaire
+      ORDER BY jours_depuis_expiration DESC
+      LIMIT 20
+    `);
+
+    return res.status(200).json({ ok: true, attestations: result.rows });
+  } catch (error: any) {
+    console.error('Erreur chargement RC expirées:', error);
+    return res.status(500).json({ ok: false, error: 'Erreur chargement RC expirées' });
+  }
+};
+
+/**
  * POST /api/dashboard/secretaire/attestations/:etudiantId/valider?userId=...
  * ✅ UPDATE via v_action_valider_attestation_rc + trigger
  */

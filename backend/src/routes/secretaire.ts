@@ -18,6 +18,8 @@ router.post('/attestations/:etudiantId/refuser', secCtrl.refuserAttestationRC);
 // ==================== GESTION DES ÉTUDIANTS ====================
 router.get('/etudiants', secCtrl.listerEtudiants);
 router.post('/etudiants', secCtrl.creerEtudiant);
+// Liste (EXPIRÉES)
+router.get('/attestations-expirees', secCtrl.getAttestationsExpirees);
 
 // ==================== CONGÉS (NOUVEAU) ====================
 router.get('/conges/remplacants', congeCtrl.listRemplacants);

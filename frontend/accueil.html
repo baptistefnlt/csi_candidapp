@@ -70,7 +70,7 @@
         <div class="flex items-center space-x-4">
           <a href="/login" class="text-gray-600 hover:text-primary-600 font-medium transition">Connexion</a>
           <a href="/register_entreprise.html" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition">
-            S'inscrire
+            Inscription entreprise
           </a>
         </div>
       </div>
@@ -83,19 +83,27 @@
       <div class="grid lg:grid-cols-2 gap-12 items-center">
         <div>
           <h1 class="text-4xl lg:text-5xl font-bold leading-tight mb-6">
-            Gérez vos candidatures<br/>
-            <span class="text-purple-200">simplement et efficacement</span>
+            La plateforme pour gérer offres, candidatures<br/>
+            <span class="text-purple-200">et validations, sans friction</span>
           </h1>
-          <p class="text-lg text-purple-100 mb-8">
-            Candidapp vous aide à suivre vos candidatures de stage et d'alternance,
-            gérer vos offres et collaborer avec votre établissement en toute simplicité.
+          <p class="text-lg text-purple-100 mb-6">
+            Candidapp centralise le workflow complet :
+            <span class="font-semibold">l’entreprise</span> publie ses offres,
+            <span class="font-semibold">l’étudiant</span> candidate et suit ses statuts,
+            <span class="font-semibold">l’enseignant</span> valide la conformité et l’affectation,
+            et le <span class="font-semibold">secrétariat</span> gère l’entrée administrative (comptes, RC).
+          </p>
+          <p class="text-sm text-purple-100/90 mb-8">
+            <span class="font-semibold">Important :</span>
+            seuls les comptes <span class="font-semibold">Entreprise</span> sont créés via l’application.
+            Les comptes <span class="font-semibold">Étudiant / Enseignant / Secrétaire</span> sont fournis par l’établissement.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <a href="/login" class="bg-white text-primary-600 hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold text-center transition">
-              Commencer maintenant
+              Se connecter
             </a>
-            <a href="#comment-ca-marche" class="border-2 border-white text-white hover:bg-white hover:text-primary-600 px-6 py-3 rounded-lg font-semibold text-center transition">
-              En savoir plus
+            <a href="/register_entreprise.html" class="border-2 border-white text-white hover:bg-white hover:text-primary-600 px-6 py-3 rounded-lg font-semibold text-center transition">
+              Créer un compte entreprise
             </a>
           </div>
         </div>
@@ -109,16 +117,16 @@
               </div>
               <div class="space-y-3">
                 <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
-                  <span class="text-gray-700 font-medium">Stage - Entreprise ABC</span>
-                  <span class="text-green-600 text-sm font-semibold">Acceptée</span>
+                  <span class="text-gray-700 font-medium">Offre - Validation enseignant</span>
+                  <span class="text-green-600 text-sm font-semibold">Validée</span>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
-                  <span class="text-gray-700 font-medium">Alternance - Startup XYZ</span>
-                  <span class="text-yellow-600 text-sm font-semibold">En attente</span>
+                  <span class="text-gray-700 font-medium">Candidature - Décision entreprise</span>
+                  <span class="text-yellow-600 text-sm font-semibold">En cours</span>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                  <span class="text-gray-700 font-medium">Stage - Groupe DEF</span>
-                  <span class="text-blue-600 text-sm font-semibold">Entretien</span>
+                  <span class="text-gray-700 font-medium">Dossier - Contrôle RC / suivi</span>
+                  <span class="text-blue-600 text-sm font-semibold">À vérifier</span>
                 </div>
               </div>
             </div>
@@ -134,7 +142,7 @@
       <div class="text-center mb-16">
         <h2 class="text-3xl font-bold text-gray-900 mb-4">Fonctionnalités principales</h2>
         <p class="text-gray-600 max-w-2xl mx-auto">
-          Tout ce dont vous avez besoin pour gérer efficacement vos candidatures et vos offres de stage ou d'alternance.
+          Un espace adapté à chaque rôle : Étudiant, Entreprise, Enseignant responsable et Secrétariat. Le tout avec des règles métier intégrées (conformité légale, validations, traçabilité).
         </p>
       </div>
 
@@ -146,9 +154,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Suivi des candidatures</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Portail étudiant</h3>
           <p class="text-gray-600">
-            Suivez l'état de toutes vos candidatures en un coup d'œil. Statut, dates, relances automatiques.
+            Candidater aux offres validées, déposer et suivre l’attestation RC, gérer le profil/CV et consulter l’avancement des statuts.
           </p>
         </div>
 
@@ -159,9 +167,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Gestion des entreprises</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Espace entreprise</h3>
           <p class="text-gray-600">
-            Centralisez les informations de vos entreprises cibles : contacts, offres disponibles, historique.
+            Créer un compte, publier/modifier/désactiver des offres, consulter les candidatures reçues et accepter/refuser des candidats.
           </p>
         </div>
 
@@ -172,9 +180,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Espace collaboratif</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Validation pédagogique</h3>
           <p class="text-gray-600">
-            Partagez vos candidatures avec votre tuteur ou responsable pédagogique pour un meilleur suivi.
+            L’enseignant valide ou refuse les offres, revalide en cas de modification et confirme l’affectation après l’accord de l’entreprise.
           </p>
         </div>
 
@@ -185,9 +193,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Tableau de bord</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Suivi scolarité</h3>
           <p class="text-gray-600">
-            Visualisez vos statistiques : taux de réponse, candidatures en cours, entretiens à venir.
+            Le secrétariat inscrit les étudiants, valide les attestations RC, assure le support utilisateur et le suivi administratif.
           </p>
         </div>
 
@@ -198,9 +206,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Notifications</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Traçabilité & notifications</h3>
           <p class="text-gray-600">
-            Recevez des rappels pour vos relances, entretiens et échéances importantes.
+            Historique des décisions, statuts mis à jour de façon cohérente, et notifications pour garder tous les acteurs alignés.
           </p>
         </div>
 
@@ -211,9 +219,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Conformité légale</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Conformité & sécurité</h3>
           <p class="text-gray-600">
-            Vérifiez automatiquement que vos offres respectent les règles légales en vigueur.
+            Contrôles automatiques des règles légales et accès aux données via des vues dédiées selon le rôle (confidentialité renforcée).
           </p>
         </div>
       </div>
@@ -226,7 +234,7 @@
       <div class="text-center mb-16">
         <h2 class="text-3xl font-bold text-gray-900 mb-4">Comment ça marche ?</h2>
         <p class="text-gray-600 max-w-2xl mx-auto">
-          En quelques étapes simples, commencez à gérer vos candidatures efficacement.
+          Un parcours simple, pensé pour chaque acteur : entreprise, étudiant, enseignant responsable et secrétariat.
         </p>
       </div>
 
@@ -236,9 +244,9 @@
           <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
             1
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-3">Créez votre compte</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-3">Accédez à votre espace</h3>
           <p class="text-gray-600">
-            Inscrivez-vous gratuitement en quelques secondes avec votre adresse email.
+             Entreprise : créez votre compte via l’application. Étudiant / Enseignant / Secrétaire : connectez-vous avec le compte fourni par l’établissement.
           </p>
         </div>
 
@@ -247,9 +255,9 @@
           <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
             2
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-3">Ajoutez vos candidatures</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-3">Déposez, candidatez, validez</h3>
           <p class="text-gray-600">
-            Renseignez les offres auxquelles vous postulez et suivez leur avancement.
+            L’entreprise publie une offre, l’enseignant contrôle et valide, l’étudiant candidate, et le secrétariat vérifie les prérequis (ex : RC).
           </p>
         </div>
 
@@ -258,9 +266,9 @@
           <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
             3
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-3">Suivez et réussissez</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-3">Décidez et suivez le cycle</h3>
           <p class="text-gray-600">
-            Visualisez votre progression et décrochez le stage ou l'alternance de vos rêves.
+            L’entreprise accepte/refuse, l’enseignant valide l’affectation, et le système met à jour les statuts et l’historique pour un suivi fiable.
           </p>
         </div>
       </div>
@@ -283,7 +291,7 @@
             <span class="text-xl font-bold">Candidapp</span>
           </div>
           <p class="text-gray-400 text-sm">
-            La solution simple et efficace pour gérer vos candidatures de stage et d'alternance.
+            La plateforme de gestion des offres, candidatures et validations entre l’établissement, les étudiants et les entreprises.
           </p>
         </div>
 
@@ -326,7 +334,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const user = JSON.parse(sessionStorage.getItem('user') || 'null');
       if (user) {
-        const authButtons = document.querySelector('.flex.items-center.space-x-4');
+        const authButtons = document.getElementById('authButtons');
         if (authButtons) {
           const initial = (user.email || '?').charAt(0).toUpperCase();
           let dashboardUrl = '/profile';
