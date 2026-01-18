@@ -66,6 +66,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">Connexion rapide (dev)</label>
           <select id="quickLogin" class="block w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition bg-gray-50">
             <option value="">-- Sélectionner un utilisateur --</option>
+            <option value="admin@univ.fr|password123">Admin</option>
             <option value="etudiant@univ.fr|password123">Étudiant</option>
             <option value="professeur@univ.fr|password123">Enseignant</option>
             <option value="secretaire@univ.fr|password123">Secrétaire</option>
@@ -201,11 +202,17 @@
           return;
         }
 
+        // Stocker dans localStorage ET sessionStorage pour compatibilité
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token || 'session');
         sessionStorage.setItem('user', JSON.stringify(data.user));
 
         // Redirection conditionnelle selon le rôle
         let redirectUrl = '/profile';
         switch (data.user.role) {
+          case 'ADMIN':
+            redirectUrl = '/admin/dashboard';
+            break;
           case 'ENSEIGNANT':
             redirectUrl = '/enseignant/dashboard';
             break;
@@ -230,9 +237,12 @@
     });
 
     // Vérifier si l'utilisateur est déjà connecté
-    const existingUser = JSON.parse(sessionStorage.getItem('user') || 'null');
+    const existingUser = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
     if (existingUser) {
       switch (existingUser.role) {
+        case 'ADMIN':
+          window.location.href = '/admin/dashboard';
+          break;
         case 'ENSEIGNANT':
           window.location.href = '/enseignant/dashboard';
           break;

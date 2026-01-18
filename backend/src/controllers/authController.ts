@@ -13,7 +13,9 @@ export async function loginHandler(req: Request, res: Response) {
     // REDIRECTION CONDITIONNELLE SELON LE RÔLE
     let redirectUrl = '/profile'; // Défaut étudiant
 
-    if (user.role === 'ENSEIGNANT' || user.role === 'ADMIN') {
+    if (user.role === 'ADMIN') {
+      redirectUrl = '/admin/dashboard';
+    } else if (user.role === 'ENSEIGNANT') {
       redirectUrl = '/enseignant/dashboard';
     } else if (user.role === 'SECRETAIRE') {
       redirectUrl = '/secretaire/dashboard';
