@@ -23,3 +23,20 @@ export interface CandidatureAValider {
 export interface PayloadValidation {
     candidature_id: number;
 }
+
+/**
+ * Payload pour refuser une candidature
+ */
+export interface PayloadRefus {
+    candidature_id: number;
+    auteur_refus: 'ENSEIGNANT' | 'ENTREPRISE';
+}
+
+/**
+ * Payload pour renoncer à une candidature validée
+ */
+export interface RenoncementPayload {
+    candidature_id: number;
+    type_acteur: 'ETUDIANT' | 'ENTREPRISE' | 'ADMIN';
+    justification: string;
+}
