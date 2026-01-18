@@ -1,73 +1,127 @@
-# React + TypeScript + Vite
+# CandidApp - Gestion des Candidatures Étudiantes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application web de gestion des candidatures pour les stages, alternances et CDD destinée aux établissements d'enseignement supérieur.
 
-Currently, two official plugins are available:
+## 📋 Description
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+CandidApp permet de gérer le processus complet de candidature des étudiants aux offres d'emploi (stages, alternances, CDD) proposées par les entreprises partenaires. L'application propose différents rôles avec des fonctionnalités adaptées :
 
-## React Compiler
+- **Étudiants** : Consultation des offres, candidatures, gestion du profil et attestations RC
+- **Entreprises** : Création et gestion des offres, suivi des candidatures reçues
+- **Enseignants** : Validation des offres, suivi des étudiants, gestion du référentiel
+- **Secrétaires** : Gestion des étudiants de leur groupe, validation des attestations RC
+- **Administrateurs** : Gestion des groupes, création des comptes enseignants/secrétaires, archivage annuel
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Technologies
 
-## Expanding the ESLint configuration
+### Backend
+- **Node.js** avec **Express 5**
+- **TypeScript**
+- **PostgreSQL** avec vues et triggers
+- **JWT** pour l'authentification
+- **bcrypt** pour le hashage des mots de passe
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Frontend
+- **HTML5** / **CSS3** avec **Tailwind CSS**
+- **JavaScript** vanilla
+- Design responsive
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 📁 Structure du projet
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+csi_candidapp/
+├── backend/
+│   ├── src/
+│   │   ├── config/         # Configuration base de données
+│   │   ├── controllers/    # Logique métier
+│   │   ├── enums/          # Énumérations TypeScript
+│   │   ├── routes/         # Routes API
+│   │   ├── services/       # Services (auth, etc.)
+│   │   ├── types/          # Types TypeScript
+│   │   └── server.ts       # Point d'entrée
+│   ├── package.json
+│   └── tsconfig.json
+├── frontend/
+│   ├── js/                 # Scripts JavaScript
+│   └── *.html              # Pages HTML
+├── schema.sql              # Schéma de base de données
+└── package.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prérequis
+- Node.js (v18+)
+- PostgreSQL (v14+)
+- npm ou yarn
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Configuration de la base de données
+
+1. Créer une base de données PostgreSQL
+2. Exécuter le script `schema.sql` pour créer les tables, vues et triggers
+
+```bash
+psql -U votre_utilisateur -d votre_base -f schema.sql
 ```
+
+### Configuration du backend
+
+1. Accéder au dossier backend :
+```bash
+cd backend
+```
+
+2. Installer les dépendances :
+```bash
+npm install
+```
+
+3. Créer un fichier `.env` avec les variables suivantes :
+```env
+PORT=3000
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=votre_base
+DB_USER=votre_utilisateur
+DB_PASSWORD=votre_mot_de_passe
+```
+
+4. Lancer le serveur en mode développement :
+```bash
+npm run dev
+```
+
+Ou en mode production :
+```bash
+npm start
+```
+
+## 📡 API Endpoints
+
+| Route | Description |
+|-------|-------------|
+| `/api/auth` | Authentification (login, register, check) |
+| `/api/utilisateurs` | Gestion des utilisateurs |
+| `/api/offres` | Gestion des offres |
+| `/api/candidatures` | Gestion des candidatures |
+| `/api/enseignant` | Fonctionnalités enseignant |
+| `/api/dashboard/secretaire` | Fonctionnalités secrétaire |
+| `/api/entreprise` | Fonctionnalités entreprise |
+| `/api/etudiant` | Fonctionnalités étudiant |
+| `/api/attestation-rc` | Gestion des attestations RC |
+| `/api/notifications` | Système de notifications |
+| `/api/admin` | Fonctionnalités administrateur |
+
+## 👥 Rôles et permissions
+
+| Rôle | Accès |
+|------|-------|
+| ETUDIANT | Profil, offres validées, candidatures, attestation RC |
+| ENTREPRISE | Dashboard, création d'offres, gestion des candidatures |
+| ENSEIGNANT | Dashboard, validation des offres, référentiel, archives |
+| SECRETAIRE | Dashboard, gestion des étudiants, validation RC |
+| ADMIN | Dashboard, gestion des groupes, archivage annuel |
+
+## 📝 Licence
+
+Projet académique - Master MIAGE - Université de Lorraine. Non destiné à un usage commercial.
