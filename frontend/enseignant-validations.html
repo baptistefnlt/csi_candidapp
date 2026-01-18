@@ -529,17 +529,6 @@
                 return;
             }
 
-            // Optionnel : Demander un motif (non stocké en BDD mais dissuade les refus abusifs)
-            const motif = prompt(
-                "Motif du refus (optionnel) :\n" +
-                "Cette information n'est pas obligatoire mais aide à justifier votre décision."
-            );
-
-            // L'utilisateur a annulé
-            if (motif === null) {
-                return;
-            }
-
             const btnRefuser = document.getElementById(`btn-refuser-${candidatureId}`);
             const btnValider = document.getElementById(`btn-valider-${candidatureId}`);
             const card = document.getElementById(`card-${candidatureId}`);

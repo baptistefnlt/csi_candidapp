@@ -1,5 +1,6 @@
 import express from 'express';
 import { getProfile, updateRecherche, uploadCV, deleteCV } from '../controllers/etudiantController';
+import { renounceByStudent } from '../controllers/affectationController';
 
 const router = express.Router();
 
@@ -14,5 +15,8 @@ router.post('/cv', uploadCV);
 
 // DELETE /api/etudiant/cv - Supprimer le CV
 router.delete('/cv', deleteCV);
+
+// POST /api/etudiant/renounce - Renoncer au stage validé
+router.post('/renounce', renounceByStudent);
 
 export default router;
