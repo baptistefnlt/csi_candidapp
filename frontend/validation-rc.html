@@ -159,8 +159,10 @@
 
   function setupEventListeners() {
     document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       sessionStorage.clear();
-      window.location.href = "/login.html";
+      window.location.href = "/login";
     });
 
     document.getElementById("searchInput").addEventListener("input", () => {

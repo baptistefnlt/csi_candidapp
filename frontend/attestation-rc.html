@@ -215,6 +215,9 @@
     }
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
         sessionStorage.removeItem('user');
         window.location.href = '/login';
     });

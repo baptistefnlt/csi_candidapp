@@ -301,7 +301,10 @@
 
     // ==================== LOGOUT ====================
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      sessionStorage.removeItem("user");
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
       window.location.href = '/login';
     });
 
