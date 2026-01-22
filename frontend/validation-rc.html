@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Validation RC - Candidapp</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -23,9 +24,18 @@
     }
   </script>
   <style>
-    .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%); }
-    .card-hover { transition: transform .3s ease, box-shadow .3s ease; }
-    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.1); }
+    .gradient-bg {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+    }
+
+    .card-hover {
+      transition: transform .3s ease, box-shadow .3s ease;
+    }
+
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
+    }
   </style>
 </head>
 
@@ -44,19 +54,23 @@
             </svg>
           </div>
           <span class="text-xl font-bold text-gray-900">Candidapp</span>
-          <span class="hidden sm:inline-block text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-medium">Secrétariat</span>
+          <span
+            class="hidden sm:inline-block text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-medium">Secrétariat</span>
         </a>
 
         <!-- Navigation Links -->
         <div class="hidden md:flex items-center space-x-6">
-          <a id="nav-dashboard" href="/secretaire/dashboard" class="text-gray-600 hover:text-primary-600 transition">Tableau de bord</a>
-          <a id="nav-etudiants" href="/secretaire/etudiants" class="text-gray-600 hover:text-primary-600 transition">Gestion étudiants</a>
-          <a id="nav-rc" href="/secretaire/validation-rc" class="text-primary-600 font-semibold border-b-2 border-primary-600 pb-1 flex items-center space-x-1">
+          <a id="nav-dashboard" href="/secretaire/dashboard"
+            class="text-gray-600 hover:text-primary-600 transition">Tableau de bord</a>
+          <a id="nav-etudiants" href="/secretaire/etudiants"
+            class="text-gray-600 hover:text-primary-600 transition">Gestion étudiants</a>
+          <a id="nav-rc" href="/secretaire/validation-rc"
+            class="text-primary-600 font-semibold border-b-2 border-primary-600 pb-1 flex items-center space-x-1">
             <span>Validation RC</span>
             <span id="menuBadgeRC" class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden"></span>
           </a>
           <a id="nav-offres" href="/offres" class="text-gray-600 hover:text-primary-600 transition">Offres</a>
-          <a id="nav-profil" href="/secretaire/profil" class="text-gray-600 hover:text-primary-600 transition">Mon profil</a>
+
         </div>
 
         <!-- User Menu -->
@@ -76,10 +90,11 @@
             </div>
             <span id="userEmailBadge" class="text-primary-700 font-medium text-sm max-w-[120px] truncate"></span>
           </div>
-          <button id="logoutBtn" class="flex items-center space-x-2 text-gray-600 hover:text-red-600 font-medium transition">
+          <button id="logoutBtn"
+            class="flex items-center space-x-2 text-gray-600 hover:text-red-600 font-medium transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             <span class="hidden sm:inline">Déconnexion</span>
           </button>
@@ -141,149 +156,149 @@
     </div>
   </main>
 
-<script>
-  // ==================== SESSION ====================
-  let user = null;
-  try { user = JSON.parse(sessionStorage.getItem("user") || "null"); } catch { user = null; }
-  if (!user || !user.id) window.location.href = "/login.html";
-  const userId = user.id;
+  <script>
+    // ==================== SESSION ====================
+    let user = null;
+    try { user = JSON.parse(sessionStorage.getItem("user") || "null"); } catch { user = null; }
+    if (!user || !user.id) window.location.href = "/login.html";
+    const userId = user.id;
 
-  // Détection si c'est un enseignant remplaçant
-  const isEnseignantRemplacant = user?.role === 'ENSEIGNANT';
+    // Détection si c'est un enseignant remplaçant
+    const isEnseignantRemplacant = user?.role === 'ENSEIGNANT';
 
-  // ==================== UI INIT ====================
-  function initUserUI() {
-    const email = user?.email || '';
-    const nom = user?.nom || '';
-    const initial = (nom[0] || email[0] || 'S').toUpperCase();
+    // ==================== UI INIT ====================
+    function initUserUI() {
+      const email = user?.email || '';
+      const nom = user?.nom || '';
+      const initial = (nom[0] || email[0] || 'S').toUpperCase();
 
-    document.getElementById('userInitial').textContent = initial;
-    document.getElementById('userEmailBadge').textContent = email;
+      document.getElementById('userInitial').textContent = initial;
+      document.getElementById('userEmailBadge').textContent = email;
 
-    // Si c'est un enseignant remplaçant, adapter l'interface
-    if (isEnseignantRemplacant) {
-      const btnRetour = document.getElementById('btnRetourEnseignant');
-      if (btnRetour) {
-        btnRetour.classList.remove('hidden');
-        btnRetour.classList.add('flex');
+      // Si c'est un enseignant remplaçant, adapter l'interface
+      if (isEnseignantRemplacant) {
+        const btnRetour = document.getElementById('btnRetourEnseignant');
+        if (btnRetour) {
+          btnRetour.classList.remove('hidden');
+          btnRetour.classList.add('flex');
+        }
+        const navProfil = document.getElementById('nav-profil');
+        if (navProfil) navProfil.style.display = 'none';
       }
-      const navProfil = document.getElementById('nav-profil');
-      if (navProfil) navProfil.style.display = 'none';
     }
-  }
 
-  // ==================== INIT ====================
-  window.addEventListener("DOMContentLoaded", () => {
-    initUserUI();
-    setupEventListeners();
-    setActiveMenu();
-    loadAttestations();
-  });
-
-  function setupEventListeners() {
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      Auth.logout('Vous avez été déconnecté.');
+    // ==================== INIT ====================
+    window.addEventListener("DOMContentLoaded", () => {
+      initUserUI();
+      setupEventListeners();
+      setActiveMenu();
+      loadAttestations();
     });
 
-    document.getElementById("searchInput").addEventListener("input", () => {
-      filterRows();
-    });
-  }
+    function setupEventListeners() {
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        Auth.logout('Vous avez été déconnecté.');
+      });
 
-  function setActiveMenu() {
-    const navItems = ['nav-dashboard', 'nav-etudiants', 'nav-rc', 'nav-profil'];
-
-    navItems.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.classList.remove('text-primary-600', 'font-semibold', 'border-b-2', 'border-primary-600', 'pb-1');
-      el.classList.add('text-gray-600');
-    });
-
-    const activeEl = document.getElementById('nav-rc');
-    if (activeEl) {
-      activeEl.classList.remove('text-gray-600');
-      activeEl.classList.add('text-primary-600', 'font-semibold', 'border-b-2', 'border-primary-600', 'pb-1');
+      document.getElementById("searchInput").addEventListener("input", () => {
+        filterRows();
+      });
     }
-  }
 
-  // ==================== RC : LISTE ====================
-  let currentAttestations = [];
+    function setActiveMenu() {
+      const navItems = ['nav-dashboard', 'nav-etudiants', 'nav-rc', 'nav-profil'];
 
-  async function loadAttestations() {
-    const loading = document.getElementById("rcLoading");
-    const empty = document.getElementById("rcEmpty");
-    const list = document.getElementById("rcList");
-    const badge = document.getElementById("menuBadgeRC");
-    const count = document.getElementById("rcCount");
-    const statusBadge = document.getElementById("rcStatusBadge");
+      navItems.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('text-primary-600', 'font-semibold', 'border-b-2', 'border-primary-600', 'pb-1');
+        el.classList.add('text-gray-600');
+      });
 
-    loading.classList.remove("hidden");
-    empty.classList.add("hidden");
-    list.innerHTML = "";
-    statusBadge.textContent = "Chargement…";
-    statusBadge.className = "text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-700";
+      const activeEl = document.getElementById('nav-rc');
+      if (activeEl) {
+        activeEl.classList.remove('text-gray-600');
+        activeEl.classList.add('text-primary-600', 'font-semibold', 'border-b-2', 'border-primary-600', 'pb-1');
+      }
+    }
 
-    try {
-      const res = await fetch(`/api/dashboard/secretaire/attestations?userId=${userId}`);
-      const data = await res.json();
+    // ==================== RC : LISTE ====================
+    let currentAttestations = [];
 
-      loading.classList.add("hidden");
+    async function loadAttestations() {
+      const loading = document.getElementById("rcLoading");
+      const empty = document.getElementById("rcEmpty");
+      const list = document.getElementById("rcList");
+      const badge = document.getElementById("menuBadgeRC");
+      const count = document.getElementById("rcCount");
+      const statusBadge = document.getElementById("rcStatusBadge");
 
-      if (!data.ok) {
-        empty.textContent = "Erreur lors du chargement des attestations.";
+      loading.classList.remove("hidden");
+      empty.classList.add("hidden");
+      list.innerHTML = "";
+      statusBadge.textContent = "Chargement…";
+      statusBadge.className = "text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-700";
+
+      try {
+        const res = await fetch(`/api/dashboard/secretaire/attestations?userId=${userId}`);
+        const data = await res.json();
+
+        loading.classList.add("hidden");
+
+        if (!data.ok) {
+          empty.textContent = "Erreur lors du chargement des attestations.";
+          empty.classList.remove("hidden");
+          statusBadge.textContent = "Erreur";
+          statusBadge.className = "text-xs px-3 py-1 rounded-full bg-red-100 text-red-700";
+          return;
+        }
+
+        currentAttestations = data.attestations || [];
+
+        // Badge + count (robuste)
+        const n = currentAttestations.length;
+        count.textContent = String(n);
+
+        if (n > 0) { badge.textContent = String(n); badge.classList.remove("hidden"); }
+        else { badge.classList.add("hidden"); }
+
+        if (n === 0) {
+          empty.classList.remove("hidden");
+          statusBadge.textContent = "Aucune en attente";
+          statusBadge.className = "text-xs px-3 py-1 rounded-full bg-green-100 text-green-700";
+          return;
+        }
+
+        statusBadge.textContent = "En attente";
+        statusBadge.className = "text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700";
+
+        currentAttestations.forEach(a => list.appendChild(renderAttestationRow(a)));
+
+        filterRows();
+
+      } catch (e) {
+        loading.classList.add("hidden");
+        empty.textContent = "Erreur technique lors du chargement.";
         empty.classList.remove("hidden");
+        console.error(e);
         statusBadge.textContent = "Erreur";
         statusBadge.className = "text-xs px-3 py-1 rounded-full bg-red-100 text-red-700";
-        return;
       }
-
-      currentAttestations = data.attestations || [];
-
-      // Badge + count (robuste)
-      const n = currentAttestations.length;
-      count.textContent = String(n);
-
-      if (n > 0) { badge.textContent = String(n); badge.classList.remove("hidden"); }
-      else { badge.classList.add("hidden"); }
-
-      if (n === 0) {
-        empty.classList.remove("hidden");
-        statusBadge.textContent = "Aucune en attente";
-        statusBadge.className = "text-xs px-3 py-1 rounded-full bg-green-100 text-green-700";
-        return;
-      }
-
-      statusBadge.textContent = "En attente";
-      statusBadge.className = "text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700";
-
-      currentAttestations.forEach(a => list.appendChild(renderAttestationRow(a)));
-
-      filterRows();
-
-    } catch (e) {
-      loading.classList.add("hidden");
-      empty.textContent = "Erreur technique lors du chargement.";
-      empty.classList.remove("hidden");
-      console.error(e);
-      statusBadge.textContent = "Erreur";
-      statusBadge.className = "text-xs px-3 py-1 rounded-full bg-red-100 text-red-700";
     }
-  }
 
-  function renderAttestationRow(a) {
-    const etudiantId = a.etudiant_id;
-    const nom = `${a.prenom || ''} ${a.nom || ''}`.trim() || `Étudiant #${etudiantId}`;
-    const promo = a.promo ? `Promo ${a.promo}` : '';
-    const dateDepot = a.date_depot ? new Date(a.date_depot).toLocaleDateString('fr-FR') : '—';
-    const fichier = a.fichier_url ? shortFileName(a.fichier_url) : 'fichier indisponible';
-    const initials = getInitials(a.prenom, a.nom);
+    function renderAttestationRow(a) {
+      const etudiantId = a.etudiant_id;
+      const nom = `${a.prenom || ''} ${a.nom || ''}`.trim() || `Étudiant #${etudiantId}`;
+      const promo = a.promo ? `Promo ${a.promo}` : '';
+      const dateDepot = a.date_depot ? new Date(a.date_depot).toLocaleDateString('fr-FR') : '—';
+      const fichier = a.fichier_url ? shortFileName(a.fichier_url) : 'fichier indisponible';
+      const initials = getInitials(a.prenom, a.nom);
 
-    const row = document.createElement("div");
-    row.className = "px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 hover:bg-gray-50 transition";
-    row.dataset.search = `${nom} ${promo}`.toLowerCase();
+      const row = document.createElement("div");
+      row.className = "px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 hover:bg-gray-50 transition";
+      row.dataset.search = `${nom} ${promo}`.toLowerCase();
 
-    row.innerHTML = `
+      row.innerHTML = `
       <div class="flex items-center space-x-4 flex-1">
         <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
           <span class="text-blue-600 font-semibold text-sm">${initials}</span>
@@ -306,88 +321,89 @@
       </div>
     `;
 
-    row.querySelector('[data-action="valider"]').addEventListener("click", () => onValider(etudiantId));
-    row.querySelector('[data-action="refuser"]').addEventListener("click", () => onRefuser(etudiantId));
+      row.querySelector('[data-action="valider"]').addEventListener("click", () => onValider(etudiantId));
+      row.querySelector('[data-action="refuser"]').addEventListener("click", () => onRefuser(etudiantId));
 
-    return row;
-  }
+      return row;
+    }
 
-  function filterRows() {
-    const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-    const rows = Array.from(document.getElementById("rcList").children);
+    function filterRows() {
+      const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      const rows = Array.from(document.getElementById("rcList").children);
 
-    rows.forEach(r => {
-      const ok = !q || (r.dataset.search || "").includes(q);
-      r.style.display = ok ? "" : "none";
-    });
-  }
-
-  // ==================== RC : ACTIONS ====================
-  async function onValider(etudiantId) {
-    if (!confirm("Valider cette attestation RC ?")) return;
-
-    try {
-      const res = await fetch(`/api/dashboard/secretaire/attestations/${etudiantId}/valider?userId=${userId}`, {
-        method: "POST"
+      rows.forEach(r => {
+        const ok = !q || (r.dataset.search || "").includes(q);
+        r.style.display = ok ? "" : "none";
       });
-      const data = await res.json();
-
-      if (!data.ok) { alert(data.error || "Erreur validation"); return; }
-
-      await loadAttestations();
-    } catch (e) {
-      console.error(e);
-      alert("Erreur technique validation");
     }
-  }
 
-  async function onRefuser(etudiantId) {
-    const motif = prompt("Motif de refus (optionnel) :", "");
-    if (motif === null) return;
+    // ==================== RC : ACTIONS ====================
+    async function onValider(etudiantId) {
+      if (!confirm("Valider cette attestation RC ?")) return;
 
-    try {
-      const res = await fetch(`/api/dashboard/secretaire/attestations/${etudiantId}/refuser?userId=${userId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ motif_refus: motif || null })
-      });
-      const data = await res.json();
+      try {
+        const res = await fetch(`/api/dashboard/secretaire/attestations/${etudiantId}/valider?userId=${userId}`, {
+          method: "POST"
+        });
+        const data = await res.json();
 
-      if (!data.ok) { alert(data.error || "Erreur refus"); return; }
+        if (!data.ok) { alert(data.error || "Erreur validation"); return; }
 
-      await loadAttestations();
-    } catch (e) {
-      console.error(e);
-      alert("Erreur technique refus");
+        await loadAttestations();
+      } catch (e) {
+        console.error(e);
+        alert("Erreur technique validation");
+      }
     }
-  }
 
-  // ==================== HELPERS ====================
-  function getInitials(prenom, nom) {
-    const p = (prenom || "").trim();
-    const n = (nom || "").trim();
-    return ((p[0] || '') + (n[0] || '')).toUpperCase() || "??";
-  }
+    async function onRefuser(etudiantId) {
+      const motif = prompt("Motif de refus (optionnel) :", "");
+      if (motif === null) return;
 
-  function shortFileName(url) {
-    try {
-      if (typeof url === "string" && url.startsWith("data:")) return "attestation_rc.pdf";
-      const parts = String(url).split("/");
-      return parts[parts.length - 1] || "attestation_rc.pdf";
-    } catch {
-      return "attestation_rc.pdf";
+      try {
+        const res = await fetch(`/api/dashboard/secretaire/attestations/${etudiantId}/refuser?userId=${userId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ motif_refus: motif || null })
+        });
+        const data = await res.json();
+
+        if (!data.ok) { alert(data.error || "Erreur refus"); return; }
+
+        await loadAttestations();
+      } catch (e) {
+        console.error(e);
+        alert("Erreur technique refus");
+      }
     }
-  }
 
-  function escapeHtml(str) {
-    return String(str ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-</script>
-<script src="/js/auth.js"></script>
+    // ==================== HELPERS ====================
+    function getInitials(prenom, nom) {
+      const p = (prenom || "").trim();
+      const n = (nom || "").trim();
+      return ((p[0] || '') + (n[0] || '')).toUpperCase() || "??";
+    }
+
+    function shortFileName(url) {
+      try {
+        if (typeof url === "string" && url.startsWith("data:")) return "attestation_rc.pdf";
+        const parts = String(url).split("/");
+        return parts[parts.length - 1] || "attestation_rc.pdf";
+      } catch {
+        return "attestation_rc.pdf";
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+  <script src="/js/auth.js"></script>
 </body>
+
 </html>

@@ -98,10 +98,6 @@ app.get('/attestation-rc', (_req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'attestation-rc.html'));
 });
 
-app.get('/secretaire/profil', (_req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'profil-secretaire.html'));
-});
-
 // Routes Admin
 app.get('/admin/dashboard', (_req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'dashboard-admin.html'));
